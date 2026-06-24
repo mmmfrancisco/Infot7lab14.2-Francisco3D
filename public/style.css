@@ -5871,7 +5871,8 @@ body[class*="app-theme-"] .chat-box {
 
 #message-emoji-picker {
   position: absolute;
-  left: 14px;
+  left: auto;
+  right: 14px;
   bottom: calc(100% + 10px);
   width: min(330px, calc(100vw - 28px));
   max-height: min(430px, 58vh);
@@ -5962,7 +5963,8 @@ body[class*="chat-bg-"] #chat-view .msg-actions > .reaction-picker {
   }
 
   #message-emoji-picker {
-    left: 8px;
+    left: auto;
+    right: 8px;
     bottom: calc(100% + 8px);
     width: min(268px, calc(100vw - 32px));
     max-height: min(390px, 54vh);
