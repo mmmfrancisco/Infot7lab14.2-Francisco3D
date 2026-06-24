@@ -1,0 +1,5500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Infinity Chat - Secure Real-Time Messaging</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div id="auth-view">
+    <div class="auth-card">
+      <div class="auth-robot-strip" aria-hidden="true">
+        <span class="mini-bot bot-one"></span>
+        <span class="mini-bot bot-two"></span>
+        <span class="mini-bot bot-three"></span>
+      </div>
+      <h1>Infinity Chat</h1>
+      <p id="auth-subtitle">Sign in and jump back into your chats</p>
+
+      <div class="auth-tabs">
+        <button id="tab-login" class="active" onclick="switchTab('login')">Login</button>
+        <button id="tab-register" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <div id="auth-error" class="auth-error"></div>
+
+      <form id="auth-form">
+        <input type="text" id="auth-username" placeholder="Username" required />
+        <div class="password-input-wrapper">
+          <input type="password" id="auth-password" placeholder="Password" required />
+          <button type="button" class="toggle-password-btn is-hidden" onclick="togglePasswordVisibility()" title="Toggle password visibility">
+            <svg id="eye-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <!-- Open eye (visible when password is hidden) -->
+              <path d="M12 5C7 5 2.73 8.11 1 12.5C2.73 16.89 7 20 12 20c5 0 9.27-3.11 11-7.5C21.27 8.11 17 5 12 5zm0 10c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-8c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"></path>
+            </svg>
+            <svg id="eye-slash-icon" style="display:none" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <!-- Closed eye with slash (visible when password is shown) -->
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-4.48-11-11a9.96 9.96 0 0 1 5.064-8.595M9.13 9.13a3 3 0 0 0 4.24 4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div id="avatar-wrapper" class="avatar-wrapper">
+          <p>Choose Your Robot</p>
+          <div class="avatar-grid" id="avatar-grid"></div>
+        </div>
+
+        <button type="submit" class="auth-btn" id="auth-submit-btn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="chat-view" style="display:none;">
+    <div class="chat-app-container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="brand">
+            <span class="brand-icon">💬</span>
+            <span class="brand-name">Infinity Chat</span>
+          </div>
+          <span id="ws-status-dot" class="pulse-dot"></span>
+        </div>
+
+        <div class="sidebar-section-title">MY PROFILE</div>
+
+        <div class="profile-card">
+          <button id="current-user-story-btn" class="story-avatar-btn" type="button" onclick="openStoryOrProfile(currentUser,true)">
+            <img id="current-user-avatar" src="" alt="Avatar">
+            <span id="current-user-story-dot" class="story-ring-dot" style="display:none;"></span>
+            <span id="current-user-note" class="note-bubble" style="display:none;"></span>
+          </button>
+
+          <div class="profile-info">
+            <div id="current-user-name" class="profile-handle"></div>
+            <div id="profile-bio-preview" class="profile-role">
+              Infinity Chat User
+            </div>
+            <button class="view-profile-button" onclick="openProfileModal(currentUser,true)">
+              View Profile
+            </button>
+            <div class="profile-quick-actions">
+              <button type="button" onclick="openStoryComposer()">Story</button>
+              <button type="button" onclick="openNoteComposer()">Note</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section-title">ROOMS & GROUPS</div>
+
+        <button id="lounge-room-btn" class="room-btn active" onclick="switchRoom('lounge')">
+          <span>Lounge Chat</span>
+        </button>
+        <button class="room-btn" onclick="openCreateGroupModal()">Create Group</button>
+
+        <div id="groups-list"></div>
+
+        <div id="stories-title" class="sidebar-section-title" style="display:none;">Stories</div>
+        <div id="stories-list" class="stories-list" style="display:none;"></div>
+
+        <div id="direct-messages-title" class="sidebar-section-title">Direct Messages</div>
+
+        <input 
+          type="text" 
+          id="user-search" 
+          class="search-box" 
+          placeholder="Search users..."
+        />
+
+        <div id="online-users-list"></div>
+
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </aside>
+
+      <main class="chat-main">
+        <header class="chat-header">
+          <button id="mobile-back-btn" class="mobile-back-btn" type="button" onclick="showMobileSidebar()" title="Back to chats">‹</button>
+          <div>
+            <h2 id="room-title">Lounge</h2>
+            <p id="room-subtitle">Global real-time chat room</p>
+            <small id="typing-indicator"></small>
+          </div>
+          <button id="view-members-btn" class="header-icon-btn" type="button" onclick="openRoomInfoModal()" title="Room info">Info</button>
+        </header>
+
+        <section id="chat-box" class="chat-box"></section>
+
+        <div id="reply-preview" class="reply-preview" style="display:none;">
+          <div>
+            <strong id="reply-preview-author"></strong>
+            <span id="reply-preview-text"></span>
+          </div>
+          <button type="button" onclick="clearReplyPreview()" title="Cancel reply">×</button>
+        </div>
+
+        <form id="message-form" class="message-form">
+          <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" />
+          <button type="button" class="emoji-trigger-btn" onclick="toggleMessageEmojiPicker()" title="Add emoji">☺</button>
+          <div id="message-emoji-picker" class="emoji-picker" style="display:none;"></div>
+          <button type="button" class="file-trigger-btn" onclick="openMessageFilePicker()" title="Add file, photo, or video">+</button>
+          <input type="file" id="message-file-input" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip" hidden>
+          <button type="submit">Send</button>
+        </form>
+      </main>
+    </div>
+  </div>
+
+  <div id="group-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeCreateGroupModal()">×</button>
+      <h2>Create Group Chat</h2>
+      <input type="text" id="group-name" placeholder="Group name" />
+      <div id="group-members-select"></div>
+      <button onclick="createGroup()">Create Group</button>
+    </div>
+  </div>
+
+  <div id="manage-group-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content group-members-modal">
+      <button class="modal-close" onclick="closeManageGroupModal()">×</button>
+      <h2 id="manage-group-title">Group Members</h2>
+      <div id="manage-group-members"></div>
+      <div id="add-group-member-panel"></div>
+    </div>
+  </div>
+
+  <div id="room-info-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content room-info-modal">
+      <button class="modal-close" onclick="closeRoomInfoModal()">&times;</button>
+      <div class="room-info-menu-wrap">
+        <button id="room-info-menu-btn" class="room-info-menu-btn" type="button" onclick="toggleRoomInfoMenu(event)" title="More options">⋮</button>
+        <div id="room-info-menu" class="room-info-menu" style="display:none;">
+          <button type="button" onclick="openChatHeadFromInfo()">Open chat head</button>
+          <button type="button" onclick="openGroupPhotoPicker()">Change group photo</button>
+          <button type="button" onclick="changeGroupName()">Change name</button>
+          <button type="button" onclick="deleteGroupConversation()">Delete conversation</button>
+          <button type="button" onclick="leaveActiveGroup()">Leave group</button>
+          <button type="button" onclick="reportTechnicalProblem()">Report technical problem</button>
+        </div>
+      </div>
+      <h2 id="room-info-title">Room Info</h2>
+      <div class="room-info-actions">
+        <button id="room-info-members-btn" type="button" onclick="openGroupMembersFromInfo()">Members</button>
+        <button type="button" onclick="openMediaModal()">Photos / Videos / Files</button>
+      </div>
+      <div id="room-info-chat-background" class="room-info-chat-background" style="display:none;">
+        <label for="chat-background">Chat Theme</label>
+        <select id="chat-background" class="profile-theme-select" onchange="selectChatBackground(this.value)">
+          <option value="pink-dream">Pink Dream</option>
+          <option value="love-bouquet">Love Bouquet</option>
+          <option value="tulip-soft">Tulip Soft</option>
+          <option value="soft-heart">Soft Heart</option>
+          <option value="pink-hearts">Pink Hearts</option>
+          <option value="kawaii-pink">Kawaii Pink</option>
+        </select>
+        <div class="chat-bg-swatches" aria-label="Chat theme options">
+          <button type="button" class="chat-bg-swatch chat-bg-pink-dream" data-bg="pink-dream" onclick="selectChatBackground('pink-dream')"><span></span>Pink Dream</button>
+          <button type="button" class="chat-bg-swatch chat-bg-love-bouquet" data-bg="love-bouquet" onclick="selectChatBackground('love-bouquet')"><span></span>Love Bouquet</button>
+          <button type="button" class="chat-bg-swatch chat-bg-tulip-soft" data-bg="tulip-soft" onclick="selectChatBackground('tulip-soft')"><span></span>Tulip Soft</button>
+          <button type="button" class="chat-bg-swatch chat-bg-soft-heart" data-bg="soft-heart" onclick="selectChatBackground('soft-heart')"><span></span>Soft Heart</button>
+          <button type="button" class="chat-bg-swatch chat-bg-pink-hearts" data-bg="pink-hearts" onclick="selectChatBackground('pink-hearts')"><span></span>Pink Hearts</button>
+          <button type="button" class="chat-bg-swatch chat-bg-kawaii-pink" data-bg="kawaii-pink" onclick="selectChatBackground('kawaii-pink')"><span></span>Kawaii Pink</button>
+        </div>
+      </div>
+      <input id="group-photo-input" type="file" accept="image/*" hidden>
+    </div>
+  </div>
+
+  <div id="group-name-editor-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content group-edit-modal">
+      <button class="modal-close" type="button" onclick="closeGroupNameEditor()">&times;</button>
+      <h2>Change Group Name</h2>
+      <input id="group-name-editor-input" type="text" maxlength="40" placeholder="Group name">
+      <div class="group-edit-actions">
+        <button type="button" class="confirm-cancel-btn" onclick="closeGroupNameEditor()">Cancel</button>
+        <button id="group-name-save-btn" type="button" class="confirm-ok-btn" onclick="saveGroupNameEditor()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="group-photo-editor-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content group-photo-editor-modal">
+      <button class="modal-close" type="button" onclick="closeGroupPhotoEditor()">&times;</button>
+      <h2>Change Group Photo</h2>
+      <div id="group-photo-editor-stage" class="group-photo-editor-stage">
+        <img id="group-photo-editor-image" alt="Group photo preview">
+      </div>
+      <div class="group-photo-editor-controls">
+        <label for="group-photo-zoom">Zoom</label>
+        <input id="group-photo-zoom" type="range" min="1" max="4" step="0.01" value="1">
+      </div>
+      <div class="group-edit-actions">
+        <button type="button" class="confirm-cancel-btn" onclick="openGroupPhotoPicker()">Choose another</button>
+        <button type="button" class="confirm-cancel-btn" onclick="closeGroupPhotoEditor()">Cancel</button>
+        <button id="group-photo-save-btn" type="button" class="confirm-ok-btn" onclick="saveGroupPhotoEditor()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="media-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content media-modal">
+      <button class="modal-close" onclick="closeMediaModal()">&times;</button>
+      <h2 id="media-modal-title">Photos / Videos / Files</h2>
+      <div id="media-list"></div>
+    </div>
+  </div>
+
+  <div id="confirm-modal" class="modal-overlay confirm-overlay" style="display:none;">
+    <div class="modal-content confirm-modal">
+      <h2 id="confirm-title">Confirm Action</h2>
+      <p id="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel-btn" onclick="resolveConfirm(false)">Cancel</button>
+        <button type="button" class="confirm-ok-btn" onclick="resolveConfirm(true)">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="delete-message-modal" class="modal-overlay confirm-overlay" style="display:none;">
+    <div class="modal-content delete-message-modal">
+      <button class="modal-close" onclick="closeDeleteMessageModal()">&times;</button>
+      <h2>Who do you want to unsend this message for?</h2>
+      <label class="delete-choice-row">
+        <input type="radio" name="delete-message-choice" value="everyone" checked>
+        <span>
+          <strong>Unsend for everyone</strong>
+          <small>This message will be removed for everyone in the chat.</small>
+        </span>
+      </label>
+      <label class="delete-choice-row">
+        <input type="radio" name="delete-message-choice" value="me">
+        <span>
+          <strong>Unsend for you</strong>
+          <small>This removes the message only from your view. Others can still see it.</small>
+        </span>
+      </label>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel-btn" onclick="closeDeleteMessageModal()">Cancel</button>
+        <button type="button" class="confirm-ok-btn" onclick="confirmDeleteMessage()">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="image-viewer-modal" class="modal-overlay image-viewer-overlay" style="display:none;">
+    <div class="image-viewer-modal">
+      <button class="modal-close image-viewer-close" onclick="closeImageViewer()">&times;</button>
+      <img id="image-viewer-img" src="" alt="">
+      <a id="image-viewer-download" href="" download>Download</a>
+    </div>
+  </div>
+
+  <div id="profile-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content profile-modal profile-theme-neon-pink">
+      <button class="modal-close" onclick="closeProfileModal()">×</button>
+
+      <div class="profile-cover-wrap">
+        <img id="profile-cover" class="profile-cover" src="" alt="Cover Photo">
+        <div class="profile-cover-fallback"></div>
+        <label id="profile-cover-upload-label" class="cover-upload-btn">
+          Change Cover
+          <input type="file" id="profile-cover-upload" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,.png,.jpg,.jpeg,.webp,.gif,.bmp" hidden>
+        </label>
+      </div>
+
+      <div id="cover-editor" class="cover-editor" style="display:none;">
+        <div id="cover-crop-frame">
+          <img id="cover-crop-image" src="" alt="">
+        </div>
+        <div class="cover-crop-controls">
+          <label for="cover-crop-zoom">Zoom</label>
+          <input type="range" id="cover-crop-zoom" min="1" max="3" step="0.05" value="1">
+          <button type="button" onclick="applyCoverCrop()">Apply Cover</button>
+        </div>
+      </div>
+
+      <div class="profile-avatar-shell">
+        <img id="profile-preview" class="profile-preview" src="" alt="Profile Picture">
+        <span id="profile-online-dot" class="profile-online-dot"></span>
+      </div>
+
+      <div class="profile-header-block">
+        <input id="profile-display-name" class="profile-display-name-input" maxlength="40" placeholder="Display name">
+        <h2 id="profile-name"></h2>
+        <div id="profile-status" class="profile-status-line"></div>
+        <div class="profile-meta-grid">
+          <span id="profile-last-seen"></span>
+          <span id="profile-join-date"></span>
+        </div>
+      </div>
+
+      <div class="profile-badges" aria-label="Profile badges">
+        <span id="badge-active-user" class="profile-badge">Active User</span>
+        <span id="badge-early-member" class="profile-badge">Early Member</span>
+        <span id="badge-top-contributor" class="profile-badge">Top Contributor</span>
+      </div>
+
+      <div class="profile-stats">
+        <div><strong id="profile-stat-messages">0</strong><span>Messages</span></div>
+        <div><strong id="profile-stat-groups">0</strong><span>Groups</span></div>
+        <div><strong id="profile-stat-friends">0</strong><span>Friends</span></div>
+      </div>
+
+      <div class="profile-section">
+        <label for="profile-custom-status">Custom Status</label>
+        <div class="profile-inline-field">
+          <input id="profile-custom-status" maxlength="80" placeholder="Working on Infinity Chat">
+          <button type="button" id="profile-status-emoji-btn" class="profile-icon-btn" onclick="toggleStatusEmojiPicker()" title="Add emoji">☺</button>
+          <div id="profile-status-emoji-picker" class="emoji-picker profile-status-emoji-picker" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <label for="profile-note">Note</label>
+        <input id="profile-note" maxlength="60" placeholder="Leave a quick note">
+      </div>
+
+      <div class="profile-section">
+      <label for="profile-bio" class="profile-bio-label">Bio</label>
+      <textarea id="profile-bio" maxlength="180" placeholder="Write a short bio..."></textarea>
+      <div id="profile-bio-emoji-tools" class="bio-emoji-tools" style="display:none;">
+        <button type="button" class="bio-emoji-trigger-btn" onclick="toggleBioEmojiPicker()" title="Add emoji">☺</button>
+        <div id="profile-bio-emoji-picker" class="emoji-picker bio-emoji-picker" style="display:none;"></div>
+      </div>
+
+      </div>
+
+      <div class="profile-section">
+        <label for="profile-about">About Me</label>
+        <textarea id="profile-about" maxlength="500" placeholder="Share a little more about yourself..."></textarea>
+      </div>
+
+      <div id="profile-edit-area">
+
+  <div class="profile-section story-compose profile-inline-story-compose">
+    <h4>Stories</h4>
+    <div class="profile-story-actions">
+      <button type="button" class="profile-primary-action" onclick="openStoryComposer()">Add Story</button>
+      <button type="button" class="profile-small-action" onclick="openNoteStoryComposer()">Add Note Story</button>
+    </div>
+    <input
+      type="file"
+      id="story-media-upload"
+      accept="image/*,video/*"
+      hidden
+    >
+    <div id="profile-stories-list" class="profile-stories-list"></div>
+  </div>
+
+  <div class="profile-section">
+    <label for="profile-theme">Profile Theme</label>
+    <select id="profile-theme" class="profile-theme-select" onchange="selectProfileTheme(this.value)">
+      <option value="neon-pink">Neon Pink</option>
+      <option value="purple">Purple</option>
+      <option value="blue">Blue</option>
+      <option value="green">Green</option>
+      <option value="dark">Dark</option>
+    </select>
+    <div class="profile-theme-swatches" aria-label="Profile theme options">
+      <button type="button" class="theme-swatch theme-swatch-neon-pink" data-theme="neon-pink" onclick="selectProfileTheme('neon-pink')">
+        <span></span>Neon Pink
+      </button>
+      <button type="button" class="theme-swatch theme-swatch-purple" data-theme="purple" onclick="selectProfileTheme('purple')">
+        <span></span>Purple
+      </button>
+      <button type="button" class="theme-swatch theme-swatch-blue" data-theme="blue" onclick="selectProfileTheme('blue')">
+        <span></span>Blue
+      </button>
+      <button type="button" class="theme-swatch theme-swatch-green" data-theme="green" onclick="selectProfileTheme('green')">
+        <span></span>Green
+      </button>
+      <button type="button" class="theme-swatch theme-swatch-dark" data-theme="dark" onclick="selectProfileTheme('dark')">
+        <span></span>Dark
+      </button>
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <h4>Privacy</h4>
+    <label class="profile-toggle"><span>Show Online Status</span><input type="checkbox" id="privacy-online" checked><i></i></label>
+    <label class="profile-toggle"><span>Show Last Seen</span><input type="checkbox" id="privacy-last-seen" checked><i></i></label>
+    <label class="profile-toggle"><span>Allow Direct Messages</span><input type="checkbox" id="privacy-dms" checked><i></i></label>
+    <label class="profile-toggle"><span>Allow Profile Viewing</span><input type="checkbox" id="privacy-viewing" checked><i></i></label>
+  </div>
+
+  <div class="avatar-selector-container">
+    <h4 class="avatar-title">Choose Avatar</h4>
+
+    <div id="profile-avatar-grid"></div>
+  </div>
+
+  <label class="upload-btn">
+    Upload New Profile Picture
+    <input
+      type="file"
+      id="profile-upload"
+      accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,.png,.jpg,.jpeg,.webp,.gif,.bmp"
+      hidden
+    >
+  </label>
+
+<div id="crop-editor" style="display:none;">
+  <div id="crop-frame">
+    <img id="crop-image" src="">
+  </div>
+
+  <div class="crop-controls">
+    <label>Zoom</label>
+
+    <input
+      type="range"
+      id="crop-zoom"
+      min="1"
+      max="3"
+      step="0.1"
+      value="1"
+    >
+
+    <button type="button" onclick="applyCrop()">Apply</button>
+  </div>
+</div>
+
+  <button id="profile-save-btn" type="button" onclick="saveProfile()">
+    Save Profile
+  </button>
+
+</div>
+      <div class="profile-section profile-activity">
+        <h4>Recent Activity</h4>
+        <ul id="profile-activity-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="story-viewer-modal" class="modal-overlay story-viewer-overlay" style="display:none;">
+    <div class="story-viewer-card">
+      <div id="story-progress-bars" class="story-progress-bars"></div>
+      <button class="modal-close" onclick="closeStoryViewer()">&times;</button>
+      <header class="story-viewer-header">
+        <img id="story-viewer-avatar" src="" alt="">
+        <div>
+          <strong id="story-viewer-username"></strong>
+          <small><span id="story-viewer-time"></span> <span class="story-privacy-icon">· Friends</span></small>
+        </div>
+        <button id="story-delete-btn" class="story-delete-btn" type="button" onclick="deleteCurrentStory()" style="display:none;">Delete</button>
+      </header>
+      <div id="story-viewer-content" class="story-viewer-content">
+        <button type="button" class="story-nav-zone story-nav-prev" onclick="previousStory(event)" aria-label="Previous story"></button>
+        <button type="button" class="story-nav-zone story-nav-next" onclick="nextStory(event)" aria-label="Next story"></button>
+      </div>
+      <div id="story-video-controls" class="story-video-controls" style="display:none;">
+        <button type="button" onclick="toggleStoryVideoPlayback()">Pause</button>
+        <button type="button" onclick="toggleStoryVideoMute()">Unmute</button>
+      </div>
+      <div class="story-reply-bar">
+        <form id="story-reply-form" onsubmit="sendStoryReply(event)">
+          <input id="story-reply-input" maxlength="220" placeholder="Send message...">
+        </form>
+        <div id="story-reaction-buttons" class="story-reaction-buttons">
+          <button type="button" onclick="reactToStory('👍')" title="Like">👍</button>
+          <button type="button" onclick="reactToStory('❤️')" title="Love">❤️</button>
+          <button type="button" onclick="reactToStory('🥰')" title="Care">🥰</button>
+          <button type="button" onclick="reactToStory('😆')" title="Haha">😆</button>
+          <button type="button" onclick="reactToStory('😮')" title="Wow">😮</button>
+          <button type="button" onclick="reactToStory('😢')" title="Sad">😢</button>
+          <button type="button" onclick="reactToStory('😡')" title="Angry">😡</button>
+          <button type="button" id="story-viewers-toggle" class="story-viewers-button" onclick="toggleStoryInsights()" title="Viewers">👁</button>
+        </div>
+      </div>
+      <div id="story-action-feedback" class="story-action-feedback" style="display:none;"></div>
+      <div id="story-insights-panel" class="story-insights-panel" style="display:none;">
+        <div class="story-audience-row">
+          <strong>Story audience</strong>
+          <small>Visible to friends</small>
+        </div>
+        <div>
+          <strong>Viewers</strong>
+          <ul id="story-viewers-list"></ul>
+        </div>
+        <div>
+          <strong>Reactions</strong>
+          <ul id="story-reactions-list"></ul>
+        </div>
+      </div>
+      <button type="button" id="story-viewer-profile-btn" onclick="openStoryProfile()">View Profile</button>
+    </div>
+  </div>
+
+  <div id="note-viewer-modal" class="modal-overlay note-viewer-overlay" style="display:none;">
+    <div class="note-viewer-card">      <button type="button" class="note-viewer-close" onclick="closeNoteViewer()" aria-label="Close note">&times;</button>
+      <header class="note-viewer-header">
+        <img id="note-viewer-avatar" src="" alt="">
+        <div>
+          <strong id="note-viewer-username"></strong>
+          <small id="note-viewer-time"></small>
+        </div>
+      </header>
+      <section class="note-viewer-body">
+        <span id="note-viewer-text"></span>
+      </section>
+    </div>
+  </div>
+  <div id="story-preview-modal" class="modal-overlay story-composer-overlay" style="display:none;">
+    <div class="story-composer-card story-preview-card">
+      <button class="modal-close" onclick="closeStoryPreview()">&times;</button>
+      <h2>Preview Story</h2>
+      <p>Confirm before this is added to your active stories.</p>
+      <div id="story-preview-content" class="story-preview-content"></div>
+      <div class="composer-actions">
+        <button type="button" onclick="closeStoryPreview()">Cancel</button>
+        <button type="button" id="story-publish-btn" onclick="confirmPendingStory()">Publish Story</button>
+      </div>
+    </div>
+  </div>
+
+      <div id="note-story-modal" class="modal-overlay story-composer-overlay" style="display:none;">
+    <div class="story-composer-card note-story-card">
+      <button class="modal-close" onclick="closeNoteStoryComposer()">&times;</button>
+      <h2>Add Note Story</h2>
+      <p>Write a short Messenger-style note. It expires after 24 hours.</p>
+      <input id="note-story-input" maxlength="60" placeholder="What's on your mind?">
+      <div class="note-story-preview">
+        <span id="note-story-preview-bubble">Your note appears here</span>
+      </div>
+      <div class="composer-actions">
+        <button type="button" onclick="closeNoteStoryComposer()">Cancel</button>
+        <button type="button" onclick="publishNoteStory()">Publish Note</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="note-composer-modal" class="modal-overlay story-composer-overlay" style="display:none;">
+    <div class="story-composer-card note-composer-card">
+      <button class="modal-close" onclick="closeNoteComposer()">&times;</button>
+      <h2>Edit Note</h2>
+      <p>Notes appear as a small Messenger-style bubble near your avatar.</p>
+      <input id="composer-note-input" maxlength="60" placeholder="Write a note...">
+      <div class="composer-actions">
+        <button type="button" onclick="clearNote()">Clear</button>
+        <button type="button" onclick="publishNote()">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-toast" class="app-toast" style="display:none;"></div>
+
+    <script>
+    let socket;
+    let currentMode = 'login';
+    let currentUser = null;
+    let activeRoomId = 'lounge';
+    let allUsers = [];
+    let allGroups = [];
+    let onlineUsernames = new Set();
+    let activeUsersCount = 0;
+    let unreadCounts = {};
+    let typingTimer;
+    let activeRoomMessages = [];
+    let pendingConfirmResolve = null;
+    let pendingDeleteMessageId = null;
+    let pendingDeleteCanEveryone = false;
+    let profileRefreshTimer = null;
+    let socketGeneration = 0;
+    let lastSentMessage = { roomId: '', message: '', at: 0 };
+    let readReceipts = {};
+    let groupPhotoEditorState = null;
+    let roomThemes = {};
+    const messageElements = new Map();
+    const chatThemeIds = [
+      'pink-dream',
+      'love-bouquet',
+      'tulip-soft',
+      'soft-heart',
+      'pink-hearts',
+      'kawaii-pink'
+    ];
+    const legacyChatThemeMap = {
+      aurora: 'love-bouquet',
+      linen: 'tulip-soft',
+      glass: 'pink-hearts',
+      garden: 'kawaii-pink',
+      midnight: 'soft-heart',
+      'pink-pop': 'love-bouquet',
+      rose: 'pink-hearts',
+      'cotton-candy': 'tulip-soft',
+      lavender: 'kawaii-pink',
+      ocean: 'pink-hearts'
+    };
+    const chatThemeClassIds = [
+      ...chatThemeIds,
+      ...Object.keys(legacyChatThemeMap)
+    ];
+    const normalizeChatTheme = theme =>
+      chatThemeIds.includes(theme)
+        ? theme
+        : (legacyChatThemeMap[theme] || 'pink-dream');
+    const chatEmojis = [
+      { label: 'Laughing', value: '😂' },
+      { label: 'Sad', value: '😢' },
+      { label: 'Crying', value: '😭' },
+      { label: 'Angry', value: '😡' },
+      { label: 'Inlove', value: '😍' },
+      { label: 'Disgust', value: '🤢' },
+      { label: 'Heart', value: '❤️' }
+    ];
+
+   const robotAvatarSeeds = [
+  'Orbit', 'Pixel', 'Blinky', 'Nova', 'Circuit',
+  'Rocket', 'Mochi', 'Turbo', 'Dot', 'Widget',
+  'Nimbus', 'Byte', 'Spark', 'Cosmo', 'Radar',
+  'Pluto', 'Echo', 'Servo', 'Mint', 'Copper'
+];
+
+const robotAvatarPalettes = [
+  ['#22c7d9', '#ff4fa3', '#ffd166', '#122143'],
+  ['#ffd166', '#ff4fa3', '#7b2cbf', '#1b1742'],
+  ['#24c6dc', '#ffd166', '#ff5c8a', '#10233f'],
+  ['#8f4bd8', '#ff4fa3', '#ffbf4d', '#17153d'],
+  ['#22c7d9', '#ff9f1c', '#9b5de5', '#15183f'],
+  ['#9b5de5', '#ff4fa3', '#ffbf4d', '#202040'],
+  ['#ffbf4d', '#22c7d9', '#ff4fa3', '#17213f'],
+  ['#7b2cbf', '#24c6dc', '#ff5c8a', '#17153d'],
+  ['#24c6dc', '#ff4fa3', '#ffd166', '#10233f'],
+  ['#ff4fa3', '#22c7d9', '#ffbf4d', '#19183f'],
+  ['#ffd166', '#7b2cbf', '#24c6dc', '#19183f'],
+  ['#24c6dc', '#ff9f1c', '#ff4fa3', '#122143']
+];
+
+function getRobotAvatarUrl(seed, index = 0) {
+  const palette = robotAvatarPalettes[index % robotAvatarPalettes.length];
+  const [primary, accent, warm, face] = palette;
+  const eyeStyles = [
+    `<path d="M44 60q6 10 12 0" fill="none" stroke="${warm}" stroke-width="5" stroke-linecap="round"/><path d="M72 60q6 10 12 0" fill="none" stroke="${warm}" stroke-width="5" stroke-linecap="round"/>`,
+    `<rect x="43" y="56" width="10" height="18" rx="5" fill="${accent}"/><rect x="75" y="56" width="10" height="18" rx="5" fill="${accent}"/>`,
+    `<circle cx="49" cy="63" r="6" fill="${primary}"/><circle cx="79" cy="63" r="6" fill="${primary}"/>`,
+    `<path d="M43 58l12 9-12 9" fill="none" stroke="${primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M85 58l-12 9 12 9" fill="none" stroke="${primary}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`
+  ];
+  const mouthStyles = [
+    `<path d="M55 82q9 8 18 0" fill="none" stroke="#f8f7ff" stroke-width="4" stroke-linecap="round"/>`,
+    `<path d="M55 82h18" stroke="#f8f7ff" stroke-width="4" stroke-linecap="round"/>`,
+    `<path d="M57 80q7 9 14 0q4 8 10 0" fill="none" stroke="#f8f7ff" stroke-width="4" stroke-linecap="round"/>`
+  ];
+  const horns = index % 3 === 0
+    ? `<path d="M31 38L18 14l4 33z" fill="${warm}"/><path d="M97 38l13-24-4 33z" fill="${warm}"/>`
+    : `<rect x="28" y="17" width="9" height="28" rx="4" transform="rotate(-24 32.5 31)" fill="${accent}"/><rect x="91" y="17" width="9" height="28" rx="4" transform="rotate(24 95.5 31)" fill="${accent}"/>`;
+  const antenna = index % 4 === 0
+    ? `<line x1="64" y1="17" x2="64" y2="4" stroke="${accent}" stroke-width="5" stroke-linecap="round"/><circle cx="64" cy="4" r="5" fill="${warm}"/>`
+    : '';
+  const cheek = index % 2 === 0 ? accent : primary;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+      <circle cx="64" cy="64" r="62" fill="#ffffff"/>
+      <ellipse cx="64" cy="118" rx="24" ry="7" fill="${primary}" opacity=".32"/>
+      ${horns}
+      ${antenna}
+      <rect x="18" y="52" width="14" height="28" rx="7" fill="${accent}"/>
+      <rect x="96" y="52" width="14" height="28" rx="7" fill="${accent}"/>
+      <path d="M28 42q0-18 18-18h36q18 0 18 18v34q0 22-23 28l-13 4-13-4q-23-6-23-28z" fill="${primary}"/>
+      <path d="M38 29h52v14H38z" fill="${accent}" opacity=".42"/>
+      <path d="M44 26h40l-5 14H49z" fill="${warm}" opacity=".84"/>
+      <rect x="34" y="45" width="60" height="42" rx="13" fill="${face}"/>
+      <circle cx="34" cy="69" r="5" fill="${cheek}"/><circle cx="94" cy="69" r="5" fill="${cheek}"/>
+      ${eyeStyles[index % eyeStyles.length]}
+      ${mouthStyles[index % mouthStyles.length]}
+      <rect x="54" y="94" width="20" height="12" rx="6" fill="${warm}"/>
+      <rect x="48" y="103" width="32" height="10" rx="5" fill="${accent}"/>
+      <path d="M48 34h32" stroke="#fff" stroke-width="3" opacity=".35" stroke-linecap="round"/>
+      <path d="M52 22h24" stroke="#fff" stroke-width="3" opacity=".28" stroke-linecap="round"/>
+    </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+let selectedAvatarUrl = getRobotAvatarUrl(robotAvatarSeeds[0], 0);
+let selectedProfileAvatar = null;
+let selectedProfileCover = '';
+let selectedStoryImage = '';
+let activeStoryMode = 'text';
+let storyViewerUser = null;
+let composerStoryMode = 'text';
+let composerStoryImage = '';
+let pendingStoryDraft = null;
+let storyViewerStories = [];
+let storyViewerIndex = 0;
+let storyProgressTimer = null;
+let storyKeyboardHandler = null;
+let storyProgressStartedAt = 0;
+let storyProgressDuration = 0;
+let storyProgressRemaining = 0;
+let storyIsPaused = false;
+let storyHoldStartedAt = 0;
+let storySuppressTap = false;
+let pendingReplyMessage = null;
+const STORY_DURATION_MS = 6000;
+
+    const authForm = document.getElementById('auth-form');
+    const authErrorBox = document.getElementById('auth-error');
+    const authSubtitle = document.getElementById('auth-subtitle');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const avatarWrapper = document.getElementById('avatar-wrapper');
+    const chatBox = document.getElementById('chat-box');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const messageEmojiPicker = document.getElementById('message-emoji-picker');
+    const messageFileInput = document.getElementById('message-file-input');
+    const bioEmojiPicker = document.getElementById('profile-bio-emoji-picker');
+    const statusEmojiPicker = document.getElementById('profile-status-emoji-picker');
+    const profileBioInput = document.getElementById('profile-bio');
+    const profileStatusInput = document.getElementById('profile-custom-status');
+    const viewMembersBtn = document.getElementById('view-members-btn');
+
+    avatarWrapper.style.display = 'none';
+    viewMembersBtn.classList.add('is-visible');
+
+    function renderAvatarGrid() {
+      const avatarGrid = document.getElementById('avatar-grid');
+      const profileAvatarGrid = document.getElementById('profile-avatar-grid');
+
+      avatarGrid.innerHTML = '';
+      profileAvatarGrid.innerHTML = '';
+
+      robotAvatarSeeds.forEach((seed, index) => {
+        const url = getRobotAvatarUrl(seed, index);
+        const registerDiv = document.createElement('div');
+        registerDiv.className = `avatar-option ${index === 0 ? 'selected' : ''}`;
+        registerDiv.innerHTML = `<img src="${url}" alt="${seed}">`;
+        registerDiv.onclick = () => {
+          document.querySelectorAll('#avatar-grid .avatar-option')
+            .forEach(item => item.classList.remove('selected'));
+
+          registerDiv.classList.add('selected');
+          selectedAvatarUrl = url;
+        };
+
+        avatarGrid.appendChild(registerDiv);
+
+        const profileDiv = document.createElement('div');
+        profileDiv.className = 'avatar-option';
+        profileDiv.innerHTML = `<img src="${url}" alt="${seed}">`;
+        profileDiv.onclick = () => {
+          document.querySelectorAll('#profile-avatar-grid .avatar-option')
+            .forEach(item => item.classList.remove('selected'));
+
+          profileDiv.classList.add('selected');
+          document.getElementById('profile-preview').src = url;
+          selectedProfileAvatar = url;
+        };
+
+        profileAvatarGrid.appendChild(profileDiv);
+      });
+    }
+
+    renderAvatarGrid();
+    const tabsEl = document.querySelector('.auth-tabs');
+    if (tabsEl) tabsEl.dataset.active = currentMode;
+    const passwordInput = document.getElementById('auth-password');
+    const togglePasswordBtn = document.querySelector('.toggle-password-btn');
+
+    function syncPasswordToggleVisibility() {
+      const hasPassword = passwordInput.value.length > 0;
+
+      togglePasswordBtn.classList.toggle('is-hidden', !hasPassword);
+
+      if (!hasPassword) {
+        passwordInput.type = 'password';
+        document.getElementById('eye-icon').style.display = 'block';
+        document.getElementById('eye-slash-icon').style.display = 'none';
+      }
+    }
+
+    passwordInput.addEventListener('input', syncPasswordToggleVisibility);
+    syncPasswordToggleVisibility();
+
+    function getUserByUsername(username) {
+      const user = allUsers.find(
+        user => user.username.toLowerCase() === username.toLowerCase()
+      ) || {
+        username,
+        avatar: getRobotAvatarUrl(username, username.length),
+        bio: 'Infinity Chat user'
+      };
+
+      return mergeCachedProfile(user);
+    }
+
+    function getMessageProfile(payload) {
+      const username = payload.username || payload.sender || 'User';
+      const knownUser = getUserByUsername(username);
+
+      return mergeCachedProfile({
+        ...knownUser,
+        username,
+        avatar:
+          payload.avatar ||
+          knownUser.avatar ||
+          getRobotAvatarUrl(username, username.length),
+        displayName: knownUser.displayName || username,
+        bio: knownUser.bio || 'Infinity Chat user'
+      });
+    }
+
+    function canSeeUserOnlineStatus(user) {
+      const profile = normalizeProfile(user);
+      return profile.username === currentUser?.username || profile.privacy.showOnlineStatus;
+    }
+
+    function isUserShownOnline(user) {
+      return canSeeUserOnlineStatus(user) && onlineUsernames.has(user.username);
+    }
+
+    function canDirectMessageUser(user) {
+      const profile = normalizeProfile(user);
+      return profile.username === currentUser?.username || profile.privacy.allowDirectMessages;
+    }
+
+    function getDmTargetUsername(roomId) {
+      if (!roomId?.startsWith('dm_') || !currentUser?.username) return '';
+
+      return roomId
+        .replace('dm_', '')
+        .split('_')
+        .find(username => username !== currentUser.username) || '';
+    }
+
+    function getDmBlockedMessage(user) {
+      return `${user.username} is not accepting direct messages.`;
+    }
+
+    function getRoomRecipientProfiles(roomId = activeRoomId) {
+      if (!currentUser) return [];
+
+      if (roomId.startsWith('dm_')) {
+        const username = getDmTargetUsername(roomId);
+        return username ? [getUserByUsername(username)] : [];
+      }
+
+      if (roomId.startsWith('group_')) {
+        const group = allGroups.find(item => `group_${item._id}` === roomId);
+        return (group?.members || [])
+          .filter(username => username !== currentUser.username)
+          .map(username => getUserByUsername(username));
+      }
+
+      return allUsers.filter(user => user.username !== currentUser.username);
+    }
+
+    function getMessageStatusState(message) {
+      const roomId = message.roomId || activeRoomId;
+      const recipients = getRoomRecipientProfiles(roomId);
+      const messageIndex = activeRoomMessages.findIndex(item => getMessageId(item) === getMessageId(message));
+      const seenReceipts = Object.values(readReceipts[roomId] || {}).filter(receipt => {
+        if (receipt.username === currentUser.username) return false;
+
+        const receiptIndex = activeRoomMessages.findIndex(
+          item => getMessageId(item) === String(receipt.lastMessageId)
+        );
+
+        return messageIndex >= 0 && receiptIndex === messageIndex;
+      });
+
+      if (seenReceipts.length) {
+        return {
+          state: 'seen',
+          receipts: seenReceipts.map(receipt => ({
+            username: receipt.username,
+            avatar: receipt.avatar || getUserByUsername(receipt.username).avatar
+          }))
+        };
+      }
+
+      const delivered = recipients.some(user => onlineUsernames.has(user.username));
+      return { state: delivered ? 'delivered' : 'sent' };
+    }
+
+    function sendReadReceipt() {
+      if (!socket || socket.readyState !== WebSocket.OPEN || !activeRoomMessages.length) return;
+
+      const lastMessage = activeRoomMessages[activeRoomMessages.length - 1];
+      const lastMessageId = getMessageId(lastMessage);
+      if (!lastMessageId) return;
+
+      socket.send(JSON.stringify({
+        type: 'read_receipt',
+        roomId: activeRoomId,
+        lastMessageId
+      }));
+    }
+
+    function getActiveGroup() {
+      if (!activeRoomId.startsWith('group_')) return null;
+
+      const groupId = activeRoomId.replace('group_', '');
+      return allGroups.find(group => String(group._id) === groupId) || null;
+    }
+
+    function syncActiveGroupTitles() {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      document.getElementById('room-title').textContent = group.name;
+      document.getElementById('room-info-title').textContent = `${group.name} Info`;
+    }
+
+    function renderMessageEmojiPicker() {
+      messageEmojiPicker.innerHTML = '';
+
+      chatEmojis.forEach(emoji => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'emoji-option';
+        button.title = emoji.label;
+        button.textContent = emoji.value;
+        button.onclick = () => {
+          messageInput.value += emoji.value;
+          messageInput.focus();
+          messageEmojiPicker.style.display = 'none';
+        };
+
+        messageEmojiPicker.appendChild(button);
+      });
+    }
+
+    renderMessageEmojiPicker();
+
+    function renderBioEmojiPicker() {
+      bioEmojiPicker.innerHTML = '';
+
+      chatEmojis.forEach(emoji => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'emoji-option';
+        button.title = emoji.label;
+        button.textContent = emoji.value;
+        button.onclick = () => {
+          insertBioEmoji(emoji.value);
+          bioEmojiPicker.style.display = 'none';
+        };
+
+        bioEmojiPicker.appendChild(button);
+      });
+    }
+
+    renderBioEmojiPicker();
+
+    function renderStatusEmojiPicker() {
+      statusEmojiPicker.innerHTML = '';
+
+      chatEmojis.forEach(emoji => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'emoji-option';
+        button.title = emoji.label;
+        button.textContent = emoji.value;
+        button.onclick = () => {
+          insertStatusEmoji(emoji.value);
+          statusEmojiPicker.style.display = 'none';
+        };
+
+        statusEmojiPicker.appendChild(button);
+      });
+    }
+
+    renderStatusEmojiPicker();
+
+    function toggleMessageEmojiPicker() {
+      messageEmojiPicker.style.display =
+        messageEmojiPicker.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function toggleBioEmojiPicker() {
+      bioEmojiPicker.style.display =
+        bioEmojiPicker.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function toggleStatusEmojiPicker() {
+      statusEmojiPicker.style.display =
+        statusEmojiPicker.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function openMessageFilePicker() {
+      messageFileInput.click();
+    }
+
+    function parseAttachmentPayload(content) {
+      if (!content || typeof content !== 'string' || !content.startsWith('__ATTACHMENT__:')) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(content.replace('__ATTACHMENT__:', ''));
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function createAttachmentMessage(attachment) {
+      return `__ATTACHMENT__:${JSON.stringify(attachment)}`;
+    }
+
+    function getRoomAttachments() {
+      return activeRoomMessages
+        .filter(message => !message.deletedForEveryone && !message.deletedForMe)
+        .map(message => ({
+          message,
+          attachment: parseAttachmentPayload(message.message || message.content)
+        }))
+        .filter(item => item.attachment);
+    }
+
+    function renderAttachmentContent(container, attachment) {
+      const wrap = document.createElement('div');
+      wrap.className = 'attachment-preview';
+
+      if (attachment.kind === 'image') {
+        const image = document.createElement('img');
+        image.src = attachment.dataUrl;
+        image.alt = attachment.name;
+        image.className = 'clickable-attachment-image';
+        image.onclick = () => openImageViewer(attachment);
+        wrap.appendChild(image);
+      } else if (attachment.kind === 'video') {
+        const video = document.createElement('video');
+        video.src = attachment.dataUrl;
+        video.controls = true;
+        video.preload = 'metadata';
+        wrap.appendChild(video);
+      } else {
+        const fileCard = document.createElement('a');
+        fileCard.className = 'file-attachment-card';
+        fileCard.href = attachment.dataUrl;
+        fileCard.download = attachment.name;
+        fileCard.title = attachment.name;
+
+        fileCard.innerHTML = `
+          <span class="file-attachment-icon">FILE</span>
+          <span class="file-attachment-meta">
+            <strong>${attachment.name}</strong>
+            <small>${attachment.type || 'File'} · ${formatFileSize(attachment.size || 0)}</small>
+          </span>
+          <span class="file-attachment-action">Download</span>
+        `;
+
+        wrap.appendChild(fileCard);
+      }
+
+      if (attachment.kind !== 'file') {
+        const link = document.createElement('a');
+        link.href = attachment.dataUrl;
+        link.download = attachment.name;
+        link.textContent = attachment.name;
+        link.title = attachment.name;
+        wrap.appendChild(link);
+      }
+
+      container.appendChild(wrap);
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes) return 'Unknown size';
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function openImageViewer(attachment) {
+      const image = document.getElementById('image-viewer-img');
+      const download = document.getElementById('image-viewer-download');
+
+      image.src = attachment.dataUrl;
+      image.alt = attachment.name;
+      download.href = attachment.dataUrl;
+      download.download = attachment.name;
+      document.getElementById('image-viewer-modal').style.display = 'flex';
+    }
+
+    function closeImageViewer() {
+      document.getElementById('image-viewer-modal').style.display = 'none';
+      document.getElementById('image-viewer-img').src = '';
+    }
+
+    async function sendAttachmentFile(file) {
+      if (!file) return;
+
+      const maxBytes = 5 * 1024 * 1024;
+
+      if (file.size > maxBytes) {
+        alert('File is too large. Please choose a file up to 5 MB.');
+        return;
+      }
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        alert('Connection is not ready. Please try again.');
+        return;
+      }
+
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = event => resolve(event.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const attachment = {
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size,
+        kind: file.type.startsWith('image/')
+          ? 'image'
+          : file.type.startsWith('video/')
+            ? 'video'
+            : 'file',
+        dataUrl
+      };
+
+      socket.send(JSON.stringify({
+        type: 'chat',
+        roomId: activeRoomId,
+        message: createAttachmentMessage(attachment)
+      }));
+    }
+
+    messageFileInput.addEventListener('change', async () => {
+      const file = messageFileInput.files[0];
+      messageFileInput.value = '';
+      await sendAttachmentFile(file);
+    });
+
+    function insertBioEmoji(emoji) {
+      const start = profileBioInput.selectionStart || 0;
+      const end = profileBioInput.selectionEnd || 0;
+      const before = profileBioInput.value.slice(0, start);
+      const after = profileBioInput.value.slice(end);
+
+      profileBioInput.value = `${before}${emoji}${after}`;
+      profileBioInput.focus();
+      profileBioInput.selectionStart = start + emoji.length;
+      profileBioInput.selectionEnd = start + emoji.length;
+    }
+
+    function insertStatusEmoji(emoji) {
+      const start = profileStatusInput.selectionStart || 0;
+      const end = profileStatusInput.selectionEnd || 0;
+      const before = profileStatusInput.value.slice(0, start);
+      const after = profileStatusInput.value.slice(end);
+
+      profileStatusInput.value = `${before}${emoji}${after}`;
+      profileStatusInput.focus();
+      profileStatusInput.selectionStart = start + emoji.length;
+      profileStatusInput.selectionEnd = start + emoji.length;
+    }
+
+    function getProfileCacheKey(username) {
+      return `infinity_profile_${username}`;
+    }
+
+    function readCachedProfile(username) {
+      if (!username) return {};
+
+      try {
+        return JSON.parse(localStorage.getItem(getProfileCacheKey(username)) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function writeCachedProfile(username, profileData) {
+      if (!username) return;
+
+      localStorage.setItem(
+        getProfileCacheKey(username),
+        JSON.stringify(profileData)
+      );
+    }
+
+    function cacheProfileFromUser(user) {
+      if (!user?.username) return;
+
+      writeCachedProfile(user.username, {
+        displayName: user.displayName,
+        avatar: user.avatar,
+        coverPhoto: user.coverPhoto,
+        bio: user.bio,
+        aboutMe: user.aboutMe,
+        customStatus: user.customStatus,
+        story: user.story || null,
+        stories: getActiveStories(user),
+        notes: Array.isArray(user.notes) ? user.notes.map(normalizeNoteItem).filter(Boolean) : [],
+        note: normalizeNoteItem(user.note)
+          ? {
+              text: normalizeNoteItem(user.note).content,
+              updatedAt: normalizeNoteItem(user.note).createdAt
+            }
+          : null,
+        profileTheme: user.profileTheme,
+        chatBackground: user.chatBackground,
+        privacy: user.privacy,
+        messages: user.messages,
+        messageCount: user.messageCount,
+        totalMessages: user.totalMessages,
+        groupsCount: user.groupsCount,
+        groupCount: user.groupCount,
+        lastSeen: user.lastSeen,
+        createdAt: user.createdAt
+      });
+    }
+
+    function mergeCachedProfile(user) {
+      if (!user?.username) return user;
+
+      const cached = readCachedProfile(user.username);
+      const merged = {
+        ...cached,
+        ...user,
+        stories: Array.isArray(user.stories) && user.stories.length ? user.stories : cached.stories,
+        notes: Array.isArray(user.notes) && user.notes.length ? user.notes : cached.notes,
+        story: user.story?.content || user.story?.mediaUrl ? user.story : cached.story,
+        note: Object.prototype.hasOwnProperty.call(user, 'note')
+          ? user.note
+          : cached.note
+      };
+
+      return normalizeExpiringProfile(merged);
+    }
+
+    function hasActiveStory(user) {
+      return getActiveStories(user).length > 0;
+    }
+
+    function normalizeStoryItem(story) {
+      if (!story) return null;
+      const type = ['note', 'image', 'video'].includes(story.type)
+        ? story.type
+        : story.type === 'text'
+          ? 'note'
+          : 'note';
+      const createdAt = story.createdAt || new Date().toISOString();
+      const expiresAt = story.expiresAt ||
+        new Date(new Date(createdAt).getTime() + 24 * 60 * 60 * 1000).toISOString();
+      const mediaUrl = story.mediaUrl || (type !== 'note' ? story.content : '');
+      const content = type === 'note' ? (story.content || '') : (story.content || '');
+
+      if (new Date(expiresAt).getTime() <= Date.now()) return null;
+      if (type === 'note' && !content) return null;
+      if ((type === 'image' || type === 'video') && !mediaUrl) return null;
+
+      return {
+        id: story.id || `story_${createdAt}`,
+        type,
+        content,
+        mediaUrl,
+        createdAt,
+        expiresAt,
+        views: Array.isArray(story.views) ? story.views : [],
+        reactions: Array.isArray(story.reactions) ? story.reactions : []
+      };
+    }
+
+    function getActiveStories(user) {
+      const stories = Array.isArray(user?.stories)
+        ? user.stories.map(normalizeStoryItem).filter(Boolean)
+        : [];
+      const legacy = normalizeStoryItem(user?.story);
+
+      if (legacy && !stories.some(story => story.id === legacy.id)) {
+        stories.unshift(legacy);
+      }
+
+      return stories;
+    }
+
+    function normalizeNoteItem(note) {
+      if (!note) return null;
+      const text = note.text || note.content || '';
+      if (!text.trim()) return null;
+
+      const createdAt = note.createdAt || note.updatedAt || new Date().toISOString();
+      const expiresAt = note.expiresAt ||
+        new Date(new Date(createdAt).getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+      if (new Date(expiresAt).getTime() <= Date.now()) return null;
+
+      return {
+        id: note.id || `note_${createdAt}`,
+        type: 'note',
+        content: text,
+        mediaUrl: '',
+        createdAt,
+        expiresAt,
+        views: Array.isArray(note.views) ? note.views : [],
+        reactions: Array.isArray(note.reactions) ? note.reactions : []
+      };
+    }
+
+    function getTimelineItems(user) {
+      const stories = getActiveStories(user);
+      const notes = Array.isArray(user?.notes)
+        ? user.notes.map(normalizeNoteItem).filter(Boolean)
+        : [];
+      const currentNote = normalizeNoteItem(user?.note);
+
+      if (currentNote && !notes.some(note => note.id === currentNote.id)) {
+        notes.push(currentNote);
+      }
+
+      return [...stories, ...notes].sort((a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    }
+
+    function hasTimelineItems(user) {
+      return getTimelineItems(user).length > 0;
+    }
+
+    function normalizeExpiringProfile(user) {
+      if (!user) return user;
+
+      const stories = getActiveStories(user);
+      const noteItem = normalizeNoteItem(user.note);
+      user = {
+        ...user,
+        stories,
+        story: stories[0] || null,
+        note: noteItem
+          ? {
+              text: noteItem.content,
+              updatedAt: noteItem.createdAt
+            }
+          : null
+      };
+
+      return user;
+    }
+
+    function formatRelativeTime(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+
+      const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      return formatProfileDate(value);
+    }
+
+    function updateCurrentProfileCard() {
+      if (!currentUser) return;
+
+      const profile = normalizeProfile(currentUser);
+      const storyBtn = document.getElementById('current-user-story-btn');
+      const storyDot = document.getElementById('current-user-story-dot');
+      const noteBubble = document.getElementById('current-user-note');
+      const currentAvatar = document.getElementById('current-user-avatar');
+      const profilePreview = document.getElementById('profile-preview');
+      const activeStory = hasActiveStory(profile);
+
+      if (currentAvatar) currentAvatar.src = profile.avatar;
+      if (profilePreview && profilePreview.src !== profile.avatar) {
+        profilePreview.src = profile.avatar;
+      }
+      storyBtn.classList.toggle('has-story', activeStory);
+      storyDot.style.display = activeStory ? 'grid' : 'none';
+      noteBubble.textContent = profile.note?.text || '';
+      noteBubble.style.display = profile.note?.text ? 'block' : 'none';
+      noteBubble.onclick = event => openNoteBubbleStory(currentUser, true, event);
+    }
+
+    function upsertRealtimeProfile(profile) {
+      if (!profile?.username) return null;
+
+      const normalized = normalizeProfile(profile);
+      const exists = allUsers.some(user => user.username === normalized.username);
+      allUsers = exists
+        ? allUsers.map(user => user.username === normalized.username ? normalized : user)
+        : [...allUsers, normalized];
+      cacheProfileFromUser(normalized);
+      return normalized;
+    }
+
+    function applyRealtimeStories(ownerUsername, stories) {
+      if (!ownerUsername) return;
+
+      const normalizedUsername = ownerUsername.toLowerCase();
+      const baseProfile =
+        (currentUser?.username === normalizedUsername ? currentUser : null) ||
+        allUsers.find(user => user.username === normalizedUsername) ||
+        (storyViewerUser?.profile?.username === normalizedUsername
+          ? storyViewerUser.profile
+          : null);
+
+      if (!baseProfile) return;
+
+      const updatedProfile = normalizeProfile({
+        ...baseProfile,
+        stories: Array.isArray(stories) ? stories : [],
+        story: Array.isArray(stories) && stories.length ? stories[0] : null
+      });
+
+      upsertRealtimeProfile(updatedProfile);
+
+      if (currentUser?.username === normalizedUsername) {
+        currentUser = updatedProfile;
+        updateCurrentProfileCard();
+        renderProfileStoriesList(currentUser);
+      }
+
+      if (storyViewerUser?.profile?.username === normalizedUsername) {
+        const currentStoryId = getCurrentStory()?.id;
+        storyViewerUser.profile = updatedProfile;
+        storyViewerStories = getActiveStories(updatedProfile);
+
+        if (!storyViewerStories.length) {
+          closeStoryViewer();
+          return;
+        }
+
+        const nextIndex = storyViewerStories.findIndex(story => story.id === currentStoryId);
+        storyViewerIndex = nextIndex >= 0
+          ? nextIndex
+          : Math.min(storyViewerIndex, storyViewerStories.length - 1);
+        renderStoryInsights(normalizedUsername);
+        syncCurrentStoryReactionState();
+      }
+
+      renderOnlineUsers();
+    }
+
+    function getStoryAnalyticsKey(username) {
+      return `infinity_story_analytics_${username}`;
+    }
+
+    function readStoryAnalytics(username) {
+      try {
+        return JSON.parse(localStorage.getItem(getStoryAnalyticsKey(username)) || '{"views":[],"reactions":[]}');
+      } catch {
+        return { views: [], reactions: [] };
+      }
+    }
+
+    function writeStoryAnalytics(username, analytics) {
+      localStorage.setItem(getStoryAnalyticsKey(username), JSON.stringify(analytics));
+    }
+
+    function getProfileForStoryOwner(username) {
+      if (currentUser?.username === username) return normalizeProfile(currentUser);
+
+      const user = allUsers.find(item => item.username === username);
+      return user ? normalizeProfile(user) : null;
+    }
+
+    function recordStoryView(ownerUsername, storyId = getCurrentStory()?.id) {
+      if (!ownerUsername || !currentUser || ownerUsername === currentUser.username) return;
+
+      const analytics = readStoryAnalytics(ownerUsername);
+      if (!analytics.views.some(view => view.username === currentUser.username && view.storyId === storyId)) {
+        analytics.views.push({
+          storyId,
+          username: currentUser.username,
+          avatar: currentUser.avatar,
+          viewedAt: new Date().toISOString()
+        });
+      }
+
+      writeStoryAnalytics(ownerUsername, analytics);
+
+      fetch(`/api/stories/${encodeURIComponent(ownerUsername)}/view`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('chat_token')}`
+        },
+        body: JSON.stringify({ storyId })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.user) {
+            const updatedProfile = mergeCachedProfile(data.user);
+            cacheProfileFromUser(updatedProfile);
+            if (allUsers.some(user => user.username === updatedProfile.username)) {
+              allUsers = allUsers.map(user =>
+                user.username === updatedProfile.username ? updatedProfile : user
+              );
+            } else {
+              allUsers.push(updatedProfile);
+            }
+
+            if (storyViewerUser?.profile?.username === updatedProfile.username) {
+              storyViewerUser.profile = updatedProfile;
+              storyViewerStories = getActiveStories(updatedProfile);
+              renderStoryInsights(updatedProfile.username);
+            }
+          }
+        })
+        .catch(err => console.warn('Story view sync failed:', err));
+    }
+
+    async function persistCurrentProfilePatch(patch) {
+      if (!currentUser) return null;
+
+      const token = localStorage.getItem('chat_token');
+      const profileDraft = {
+        avatar: currentUser.avatar,
+        coverPhoto: currentUser.coverPhoto || '',
+        displayName: currentUser.displayName || currentUser.username,
+        bio: currentUser.bio || 'Infinity Chat user',
+        aboutMe: currentUser.aboutMe || '',
+        customStatus: currentUser.customStatus || '',
+        story: currentUser.story || null,
+        stories: getActiveStories(currentUser),
+        note: currentUser.note || null,
+        profileTheme: currentUser.profileTheme || 'neon-pink',
+        chatBackground: normalizeChatTheme(currentUser.chatBackground),
+        privacy: currentUser.privacy || {
+          showOnlineStatus: true,
+          showLastSeen: true,
+          allowDirectMessages: true,
+          allowProfileViewing: true
+        },
+        ...patch
+      };
+
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(profileDraft)
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to save profile update.');
+      }
+
+      currentUser = normalizeProfile({
+        ...currentUser,
+        ...(data.user || {}),
+        ...profileDraft
+      });
+
+      writeCachedProfile(currentUser.username, {
+        displayName: currentUser.displayName,
+        avatar: currentUser.avatar,
+        coverPhoto: currentUser.coverPhoto,
+        bio: currentUser.bio,
+        aboutMe: currentUser.aboutMe,
+        customStatus: currentUser.customStatus,
+        story: currentUser.story,
+        stories: getActiveStories(currentUser),
+        note: currentUser.note,
+        profileTheme: currentUser.profileTheme,
+        chatBackground: currentUser.chatBackground,
+        privacy: currentUser.privacy
+      });
+
+      updateCurrentProfileCard();
+      await fetchUsersAndGroups();
+      return currentUser;
+    }
+
+    function resizeImageFile(file, maxWidth, maxHeight, quality = 0.72) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+
+        reader.onload = event => {
+          const img = new Image();
+
+          img.onload = () => {
+            const scale = Math.min(
+              1,
+              maxWidth / img.width,
+              maxHeight / img.height
+            );
+            const width = Math.max(1, Math.round(img.width * scale));
+            const height = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+
+          img.onerror = () => resolve(event.target.result);
+          img.src = event.target.result;
+        };
+
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.addEventListener('click', event => {
+      if (
+        !messageEmojiPicker.contains(event.target) &&
+        !event.target.classList.contains('emoji-trigger-btn')
+      ) {
+        messageEmojiPicker.style.display = 'none';
+      }
+
+      if (
+        !bioEmojiPicker.contains(event.target) &&
+        !event.target.classList.contains('bio-emoji-trigger-btn')
+      ) {
+        bioEmojiPicker.style.display = 'none';
+      }
+
+      document.querySelectorAll('.reaction-picker').forEach(picker => {
+        if (
+          !picker.contains(event.target) &&
+          !event.target.classList.contains('msg-emoji-btn')
+        ) {
+          picker.style.display = 'none';
+        }
+      });
+
+      document.querySelectorAll('.message-options-menu').forEach(menu => {
+        if (
+          !menu.contains(event.target) &&
+          !event.target.classList.contains('msg-actions-btn')
+        ) {
+          menu.style.display = 'none';
+        }
+      });
+
+      if (!event.target.closest('.msg-wrapper')) {
+        closeMessageActions();
+      }
+    });
+
+    async function restoreSession() {
+      const token = localStorage.getItem('chat_token');
+      if (!token) return;
+
+      document.body.classList.add('is-restoring-session');
+      authSubtitle.textContent = 'Refreshing your session...';
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('chat_token');
+          }
+
+          authSubtitle.textContent = 'Sign in and jump back into your chats';
+          return;
+        }
+
+        const data = await res.json();
+        if (data.success && data.user) {
+          currentUser = mergeCachedProfile(data.user);
+          await enterChat();
+        }
+      } catch (err) {
+        authSubtitle.textContent = 'Connection is waking up. Refresh again in a moment.';
+      } finally {
+        document.body.classList.remove('is-restoring-session');
+      }
+    }
+
+    restoreSession();
+
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('auth-password');
+         const eyeIcon = document.getElementById('eye-icon');
+         const eyeSlashIcon = document.getElementById('eye-slash-icon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+           eyeIcon.style.display = 'none';
+           eyeSlashIcon.style.display = 'block';
+      } else {
+        passwordInput.type = 'password';
+           eyeIcon.style.display = 'block';
+           eyeSlashIcon.style.display = 'none';
+      }
+    }
+
+    function switchTab(mode) {
+      currentMode = mode;
+      authErrorBox.style.display = 'none';
+      authForm.reset();
+      syncPasswordToggleVisibility();
+
+      document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+      document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+
+      const tabs = document.querySelector('.auth-tabs');
+      if (tabs) tabs.dataset.active = mode;
+
+      if (mode === 'login') {
+        avatarWrapper.style.display = 'none';
+        authSubtitle.textContent = 'Sign in and jump back into your chats';
+        authSubmitBtn.textContent = 'Sign In';
+      } else {
+        avatarWrapper.style.display = 'block';
+        authSubtitle.textContent = 'Create an account and pick a robot face';
+        authSubmitBtn.textContent = 'Create Account';
+      }
+    }
+
+    authForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+
+      const url = currentMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
+
+      const body = currentMode === 'login'
+        ? { username, password }
+        : { username, password, avatar: selectedAvatarUrl };
+
+      const originalSubmitText = authSubmitBtn.textContent;
+      authSubmitBtn.disabled = true;
+      authSubmitBtn.classList.add('is-loading');
+      authSubmitBtn.textContent = currentMode === 'login' ? 'Signing In...' : 'Creating...';
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          authErrorBox.style.display = 'block';
+          authErrorBox.textContent = data.error || 'Authentication failed.';
+          return;
+        }
+
+        localStorage.setItem('chat_token', data.token);
+        currentUser = mergeCachedProfile(data.user);
+        enterChat();
+      } catch (err) {
+        authErrorBox.style.display = 'block';
+        authErrorBox.textContent = 'Server connection failed.';
+      } finally {
+        authSubmitBtn.disabled = false;
+        authSubmitBtn.classList.remove('is-loading');
+        authSubmitBtn.textContent = originalSubmitText;
+      }
+    });
+
+    async function enterChat() {
+      document.body.classList.remove('mobile-chat-open');
+      document.getElementById('auth-view').style.display = 'none';
+      document.getElementById('chat-view').style.display = 'flex';
+
+      document.getElementById('current-user-name').textContent = `@${currentUser.username}`;
+      document.getElementById('current-user-avatar').src = currentUser.avatar;
+      document.getElementById('profile-bio-preview').textContent =
+        currentUser.bio || 'Active Member';
+      applyProfileTheme(currentUser.profileTheme || 'neon-pink');
+      clearChatBackground();
+      updateCurrentProfileCard();
+
+      connectWebSocket();
+
+      // Wait briefly for the websocket connection to establish so the
+      // server can register this client as online before we fetch lists.
+      await waitForSocketOpen(4000);
+
+      await fetchUsersAndGroups();
+
+      if (!profileRefreshTimer) {
+        profileRefreshTimer = setInterval(() => {
+          fetchUsersAndGroups().catch(err => {
+            console.warn('Profile refresh failed:', err);
+          });
+        }, 60000);
+      }
+    }
+
+    function waitForSocketOpen(timeout = 4000) {
+      return new Promise(resolve => {
+        if (socket && socket.readyState === WebSocket.OPEN) return resolve();
+
+        if (!socket) return resolve();
+
+        const onOpen = () => {
+          try { socket.removeEventListener('open', onOpen); } catch (e) {}
+          resolve();
+        };
+
+        socket.addEventListener('open', onOpen);
+
+        setTimeout(() => {
+          try { socket.removeEventListener('open', onOpen); } catch (e) {}
+          resolve();
+        }, timeout);
+      });
+    }
+
+    async function fetchUsersAndGroups() {
+      const token = localStorage.getItem('chat_token');
+
+      const usersRes = await fetch('/api/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const usersData = await usersRes.json();
+      allUsers = (usersData.users || []).map(user => {
+        const profile = mergeCachedProfile(user);
+        cacheProfileFromUser(profile);
+        return profile;
+      });
+
+      const refreshedCurrentUser = allUsers.find(
+        user => user.username === currentUser?.username
+      );
+
+      if (refreshedCurrentUser) {
+        currentUser = normalizeProfile({
+          ...currentUser,
+          ...refreshedCurrentUser
+        });
+        cacheProfileFromUser(currentUser);
+      }
+
+      try {
+        const storiesRes = await fetch('/api/stories', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const storiesData = await storiesRes.json();
+        const storyProfiles = storiesData.profiles || [];
+
+        storyProfiles.forEach(storyProfile => {
+          const normalizedStoryProfile = normalizeExpiringProfile(storyProfile);
+          if (!hasTimelineItems(normalizedStoryProfile)) return;
+
+          const index = allUsers.findIndex(
+            user => user.username === normalizedStoryProfile.username
+          );
+
+          if (index >= 0) {
+            allUsers[index] = normalizeProfile({
+              ...allUsers[index],
+              stories: normalizedStoryProfile.stories?.length
+                ? normalizedStoryProfile.stories
+                : allUsers[index].stories,
+              notes: normalizedStoryProfile.notes?.length
+                ? normalizedStoryProfile.notes
+                : allUsers[index].notes,
+              story: normalizedStoryProfile.story || allUsers[index].story,
+              note: normalizedStoryProfile.note || allUsers[index].note
+            });
+          } else {
+            allUsers.push(normalizeProfile(normalizedStoryProfile));
+          }
+
+          cacheProfileFromUser(
+            allUsers.find(user => user.username === normalizedStoryProfile.username) ||
+            normalizedStoryProfile
+          );
+        });
+      } catch (err) {
+        console.warn('Story feed refresh failed:', err);
+      }
+
+      try {
+        await fetchGroupsList(token);
+      } catch (err) {
+        console.error('Group list refresh failed:', err);
+        renderGroupListMessage('Unable to load groups. Please refresh.');
+      }
+
+      try {
+        renderOnlineUsers();
+      } catch (err) {
+        console.error('User list render failed:', err);
+      }
+    }
+
+    async function fetchGroupsList(token = localStorage.getItem('chat_token')) {
+      const groupsRes = await fetch('/api/groups', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const groupsData = await groupsRes.json().catch(() => ({}));
+
+      if (!groupsRes.ok) {
+        throw new Error(groupsData.error || 'Unable to load groups.');
+      }
+
+      allGroups = groupsData.groups || [];
+      renderGroups();
+    }
+
+    function connectWebSocket() {
+      if (
+        socket &&
+        (socket.readyState === WebSocket.OPEN ||
+          socket.readyState === WebSocket.CONNECTING)
+      ) {
+        return;
+      }
+
+      if (socket) {
+        try { socket.close(); } catch (e) {}
+      }
+
+      const token = localStorage.getItem('chat_token');
+      const generation = ++socketGeneration;
+      const ws = new WebSocket(`ws://${location.host}?token=${token}`);
+      socket = ws;
+
+      ws.onopen = () => {
+        if (socket !== ws || generation !== socketGeneration) return;
+
+        document.getElementById('ws-status-dot').classList.add('online');
+
+        ws.send(JSON.stringify({
+          type: 'get_history',
+          roomId: activeRoomId
+        }));
+      };
+
+      ws.onclose = () => {
+        if (socket !== ws || generation !== socketGeneration) return;
+
+        document.getElementById('ws-status-dot').classList.remove('online');
+        if (currentUser) {
+          setTimeout(() => {
+            if (socket === ws && socket.readyState === WebSocket.CLOSED) {
+              socket = null;
+              connectWebSocket();
+            }
+          }, 1500);
+        }
+      };
+
+      ws.onmessage = async (event) => {
+        if (socket !== ws || generation !== socketGeneration) return;
+
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'system' || data.type === 'notification') {
+          appendSystemMsg(data.message);
+        }
+
+        if (data.type === 'online_list') {
+          onlineUsernames = new Set(data.users.map(u => u.username));
+          activeUsersCount = data.count || data.users.length;
+
+          const activeUsersCountEl = document.getElementById('active-users-count');
+          if (activeUsersCountEl) activeUsersCountEl.textContent = activeUsersCount;
+
+          renderOnlineUsers();
+        }
+
+        if (data.type === 'typing' && data.roomId === activeRoomId) {
+          document.getElementById('typing-indicator').textContent =
+            `${data.username} is typing...`;
+
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(() => {
+            document.getElementById('typing-indicator').textContent = '';
+          }, 1500);
+        }
+
+        if (data.type === 'history') {
+          if (data.roomId === activeRoomId) {
+            activeRoomMessages = data.messages || [];
+            readReceipts[data.roomId] = {};
+            (data.readReceipts || []).forEach(receipt => {
+              if (receipt.username !== currentUser.username) {
+                readReceipts[data.roomId][receipt.username] = {
+                  username: receipt.username,
+                  avatar: receipt.avatar,
+                  lastMessageId: receipt.lastMessageId
+                };
+              }
+            });
+            renderActiveRoomMessages();
+            sendReadReceipt();
+          }
+        }
+
+        if (data.type === 'chat') {
+          if (data.roomId === activeRoomId) {
+            if (!hasMessage(data)) {
+              activeRoomMessages.push(data);
+              appendChatMsg(data);
+              if (data.username !== currentUser.username) sendReadReceipt();
+            }
+          } else if (data.username !== currentUser.username) {
+            unreadCounts[data.roomId] = (unreadCounts[data.roomId] || 0) + 1;
+            renderLoungeNotification();
+            renderOnlineUsers();
+            renderGroups();
+          }
+
+          if (
+            data.storyReply &&
+            storyViewerUser?.profile?.username === currentUser?.username &&
+            data.username !== currentUser.username
+          ) {
+            showStoryActionFeedback(`New reply from ${data.username}`);
+          }
+        }
+
+        if (data.type === 'reaction' && data.roomId === activeRoomId) {
+          updateMessageReactions(data.messageId, data.reactions || {});
+        }
+
+        if (data.type === 'message_deleted' && data.roomId === activeRoomId) {
+          applyMessageDeletion(data.messageId, data.mode);
+        }
+
+        if (data.type === 'read_receipt') {
+          if (!readReceipts[data.roomId]) readReceipts[data.roomId] = {};
+          readReceipts[data.roomId][data.username] = {
+            username: data.username,
+            avatar: data.avatar,
+            lastMessageId: data.lastMessageId
+          };
+
+          if (data.roomId === activeRoomId) renderActiveRoomMessages();
+        }
+
+        if (data.type === 'room_theme_updated' && data.roomId && data.chatTheme) {
+          roomThemes[data.roomId] = normalizeChatTheme(data.chatTheme);
+          if (data.roomId === activeRoomId) {
+            applyChatBackground(roomThemes[data.roomId]);
+          }
+        }
+
+        if (data.type === 'profile_updated' && data.user) {
+          const updatedProfile = mergeCachedProfile(data.user);
+          cacheProfileFromUser(updatedProfile);
+
+          if (allUsers.some(user => user.username === updatedProfile.username)) {
+            allUsers = allUsers.map(user =>
+              user.username === updatedProfile.username ? updatedProfile : user
+            );
+          } else {
+            allUsers.push(updatedProfile);
+          }
+
+          if (currentUser?.username === updatedProfile.username) {
+            currentUser = normalizeProfile({
+              ...currentUser,
+              ...updatedProfile
+            });
+            document.getElementById('current-user-avatar').src = currentUser.avatar;
+            document.getElementById('profile-bio-preview').textContent =
+              currentUser.bio || 'Infinity Chat user';
+            updateCurrentProfileCard();
+          }
+
+          if (storyViewerUser?.profile?.username === updatedProfile.username) {
+            const currentStoryId = getCurrentStory()?.id;
+            storyViewerUser.profile = normalizeProfile({
+              ...storyViewerUser.profile,
+              ...updatedProfile
+            });
+            storyViewerStories = getActiveStories(storyViewerUser.profile);
+
+            if (!storyViewerStories.length) {
+              closeStoryViewer();
+            } else {
+              const nextIndex = storyViewerStories.findIndex(story => story.id === currentStoryId);
+              storyViewerIndex = nextIndex >= 0
+                ? nextIndex
+                : Math.min(storyViewerIndex, storyViewerStories.length - 1);
+              renderStoryInsights(updatedProfile.username);
+              syncCurrentStoryReactionState();
+            }
+          }
+
+          renderOnlineUsers();
+        }
+
+        if (data.type === 'story_reaction_updated' && data.ownerUsername && data.reaction) {
+          const ownerUsername = data.ownerUsername.toLowerCase();
+          const getReactionProfile = profile => {
+            const stories = getActiveStories(profile);
+            const story = stories.find(item => item.id === data.storyId) || stories[0];
+            if (!story) return profile;
+
+            story.reactions = (story.reactions || [])
+              .filter(reaction => reaction.username !== data.reaction.username)
+              .concat(data.reaction);
+
+            return normalizeProfile({
+              ...profile,
+              stories,
+              story: stories[0] || null
+            });
+          };
+
+          const baseProfile =
+            (currentUser?.username === ownerUsername ? currentUser : null) ||
+            allUsers.find(user => user.username === ownerUsername) ||
+            (storyViewerUser?.profile?.username === ownerUsername ? storyViewerUser.profile : null);
+
+          if (!baseProfile) return;
+
+          const updatedReactionProfile = getReactionProfile(baseProfile);
+          upsertRealtimeProfile(updatedReactionProfile);
+
+          if (currentUser?.username === ownerUsername) {
+            currentUser = updatedReactionProfile;
+            updateCurrentProfileCard();
+            renderProfileStoriesList(currentUser);
+          }
+
+          if (storyViewerUser?.profile?.username === ownerUsername) {
+            const currentStoryId = getCurrentStory()?.id;
+            storyViewerUser.profile = updatedReactionProfile;
+            storyViewerStories = getActiveStories(storyViewerUser.profile);
+            const nextIndex = storyViewerStories.findIndex(story => story.id === currentStoryId);
+            storyViewerIndex = nextIndex >= 0
+              ? nextIndex
+              : Math.min(storyViewerIndex, storyViewerStories.length - 1);
+            renderStoryInsights(ownerUsername);
+            syncCurrentStoryReactionState();
+          }
+        }
+
+        if (data.type === 'story_view_updated' && data.ownerUsername && data.view) {
+          const ownerUsername = data.ownerUsername.toLowerCase();
+          const applyView = profile => {
+            const stories = getActiveStories(profile);
+            const story = stories.find(item => item.id === data.storyId) || stories[0];
+            if (!story) return profile;
+
+            story.views = (story.views || [])
+              .filter(view => view.username !== data.view.username)
+              .concat(data.view);
+
+            return normalizeProfile({
+              ...profile,
+              stories,
+              story: stories[0] || null
+            });
+          };
+
+          const baseProfile =
+            (currentUser?.username === ownerUsername ? currentUser : null) ||
+            allUsers.find(user => user.username === ownerUsername) ||
+            (storyViewerUser?.profile?.username === ownerUsername ? storyViewerUser.profile : null);
+
+          if (!baseProfile) return;
+
+          const updatedViewProfile = applyView(baseProfile);
+          upsertRealtimeProfile(updatedViewProfile);
+
+          if (currentUser?.username === ownerUsername) {
+            currentUser = updatedViewProfile;
+            updateCurrentProfileCard();
+            renderProfileStoriesList(currentUser);
+          }
+
+          if (storyViewerUser?.profile?.username === ownerUsername) {
+            const currentStoryId = getCurrentStory()?.id;
+            storyViewerUser.profile = updatedViewProfile;
+            storyViewerStories = getActiveStories(storyViewerUser.profile);
+            const nextIndex = storyViewerStories.findIndex(story => story.id === currentStoryId);
+            storyViewerIndex = nextIndex >= 0
+              ? nextIndex
+              : Math.min(storyViewerIndex, storyViewerStories.length - 1);
+            renderStoryInsights(ownerUsername);
+          }
+        }
+
+        if (data.type === 'story_list_updated' && data.ownerUsername) {
+          applyRealtimeStories(data.ownerUsername, data.stories || []);
+        }
+
+        if (data.type === 'group_created' || data.type === 'group_updated') {
+          await fetchUsersAndGroups();
+          syncActiveGroupTitles();
+
+          if (
+            activeRoomId.startsWith('group_') &&
+            !getActiveGroup()
+          ) {
+            switchRoom('lounge');
+          }
+        }
+
+        if (data.type === 'conversation_cleared' && data.roomId === activeRoomId) {
+          activeRoomMessages = [];
+          readReceipts[activeRoomId] = {};
+          renderActiveRoomMessages();
+        }
+      };
+    }
+
+    messageForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const input = document.getElementById('message-input');
+      const message = input.value.trim();
+
+      if (!message || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      const now = Date.now();
+      if (
+        lastSentMessage.roomId === activeRoomId &&
+        lastSentMessage.message === message &&
+        now - lastSentMessage.at < 800
+      ) {
+        return;
+      }
+
+      lastSentMessage = { roomId: activeRoomId, message, at: now };
+
+      socket.send(JSON.stringify({
+        type: 'chat',
+        roomId: activeRoomId,
+        message,
+        replyTo: pendingReplyMessage
+      }));
+
+      input.value = '';
+      clearReplyPreview();
+    });
+
+    document.getElementById('message-input').addEventListener('input', () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'typing',
+          roomId: activeRoomId
+        }));
+      }
+    });
+
+    function appendSystemMsg(msg) {
+      const el = document.createElement('div');
+      el.className = 'msg-system';
+      el.textContent = msg;
+      chatBox.appendChild(el);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function getMessagePreviewText(message) {
+      const rawContent = message?.message || message?.content || '';
+      const attachment = parseAttachmentPayload(rawContent);
+      const preview = attachment
+        ? (attachment.name || attachment.type || 'Attachment')
+        : rawContent;
+
+      return String(preview).replace(/\s+/g, ' ').trim().slice(0, 120);
+    }
+
+    function setReplyTarget(message) {
+      const messageId = getMessageId(message);
+      const preview = getMessagePreviewText(message);
+      if (!messageId || !preview) return;
+
+      pendingReplyMessage = {
+        messageId,
+        username: message.username || message.sender || 'Unknown',
+        content: preview,
+        roomId: message.roomId || activeRoomId
+      };
+
+      document.getElementById('reply-preview-author').textContent =
+        `Replying to ${pendingReplyMessage.username}`;
+      document.getElementById('reply-preview-text').textContent = pendingReplyMessage.content;
+      document.getElementById('reply-preview').style.display = 'flex';
+      messageInput.focus();
+    }
+
+    function clearReplyPreview() {
+      pendingReplyMessage = null;
+      document.getElementById('reply-preview').style.display = 'none';
+      document.getElementById('reply-preview-author').textContent = '';
+      document.getElementById('reply-preview-text').textContent = '';
+    }
+
+    function closeMessageActions(exceptWrapper = null) {
+      document.querySelectorAll('.msg-wrapper.actions-visible').forEach(item => {
+        if (item !== exceptWrapper) item.classList.remove('actions-visible');
+      });
+
+      document.querySelectorAll('.reaction-picker').forEach(picker => {
+        const sameMessage = exceptWrapper && picker.dataset.messageId === exceptWrapper.dataset.messageId;
+        if (!sameMessage) picker.style.display = 'none';
+      });
+
+      document.querySelectorAll('.message-options-menu').forEach(menu => {
+        if (!exceptWrapper || !exceptWrapper.contains(menu)) menu.style.display = 'none';
+      });
+    }
+
+    function revealMessageActions(wrapper, forceOpen = false) {
+      const isOpen = wrapper.classList.contains('actions-visible');
+      closeMessageActions(wrapper);
+
+      if (isOpen && !forceOpen) {
+        wrapper.classList.remove('actions-visible');
+        return false;
+      }
+
+      wrapper.classList.add('actions-visible');
+      return true;
+    }
+
+    function appendChatMsg(payload) {
+      const el = document.createElement('div');
+      const isMe = payload.username === currentUser.username;
+      const messageId = String(payload._id || payload.id || '');
+      const isDeletedForEveryone = Boolean(payload.deletedForEveryone);
+      const isDeletedForMe = Boolean(payload.deletedForMe);
+      const isDeleted = isDeletedForEveryone || isDeletedForMe;
+      const messageProfile = getMessageProfile(payload);
+
+      if (messageId && messageElements.has(messageId)) return;
+
+      el.className = `msg-wrapper ${isMe ? 'me' : 'other'}`;
+      if (messageId) {
+        el.dataset.messageId = messageId;
+        messageElements.set(messageId, el);
+      }
+
+      const bubble = document.createElement('div');
+      bubble.className = `msg-bubble ${isDeleted ? 'is-deleted' : ''}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+
+      const emojiButton = document.createElement('button');
+      emojiButton.type = 'button';
+      emojiButton.className = 'msg-emoji-btn';
+      emojiButton.textContent = '☺';
+      emojiButton.title = 'React to message';
+      emojiButton.onclick = event => {
+        event.stopPropagation();
+        revealMessageActions(el, true);
+        const isOpen = reactionPicker.style.display !== 'none';
+        closeMessageActions(el);
+        reactionPicker.style.display = isOpen ? 'none' : 'flex';
+      };
+
+      const replyButton = document.createElement('button');
+      replyButton.type = 'button';
+      replyButton.className = 'msg-reply-btn';
+      replyButton.textContent = '↩';
+      replyButton.title = 'Reply';
+      replyButton.onclick = event => {
+        event.stopPropagation();
+        revealMessageActions(el, true);
+        setReplyTarget(payload);
+      };
+
+      const actionButton = document.createElement('button');
+      actionButton.type = 'button';
+      actionButton.className = 'msg-actions-btn';
+      actionButton.textContent = '⋯';
+      actionButton.title = 'More';
+      actionButton.onclick = event => {
+        event.stopPropagation();
+        revealMessageActions(el, true);
+        const menu = actions.querySelector('.message-options-menu');
+        menu.style.display = menu.style.display === 'none' ? 'grid' : 'none';
+      };
+
+      const reactionPicker = document.createElement('div');
+      reactionPicker.className = 'reaction-picker';
+      reactionPicker.dataset.messageId = messageId;
+      reactionPicker.style.display = 'none';
+
+      chatEmojis.forEach(emoji => {
+        const reactionButton = document.createElement('button');
+        reactionButton.type = 'button';
+        reactionButton.className = 'emoji-option';
+        reactionButton.title = emoji.label;
+        reactionButton.textContent = emoji.value;
+        reactionButton.onclick = event => {
+          event.stopPropagation();
+          sendReaction(messageId, emoji.value);
+          reactionPicker.style.display = 'none';
+        };
+
+        reactionPicker.appendChild(reactionButton);
+      });
+
+      const optionsMenu = document.createElement('div');
+      optionsMenu.className = 'message-options-menu';
+      optionsMenu.style.display = 'none';
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'message-delete-option';
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = event => {
+        event.stopPropagation();
+        openDeleteMessageModal(messageId, isMe);
+        optionsMenu.style.display = 'none';
+      };
+
+      optionsMenu.appendChild(deleteButton);
+
+      if (!isDeleted && messageId) {
+        actions.appendChild(emojiButton);
+        actions.appendChild(replyButton);
+        actions.appendChild(actionButton);
+      }
+
+      actions.appendChild(optionsMenu);
+      bubble.appendChild(actions);
+
+      const profileButton = document.createElement('button');
+      profileButton.type = 'button';
+      profileButton.className = 'message-profile-button';
+      profileButton.title = `View ${messageProfile.username}'s profile`;
+      profileButton.onclick = event => {
+        event.stopPropagation();
+        openProfileModal(messageProfile, messageProfile.username === currentUser.username);
+      };
+
+      const profileAvatar = document.createElement('img');
+      profileAvatar.src = messageProfile.avatar;
+      profileAvatar.alt = `${messageProfile.username} profile`;
+      profileButton.appendChild(profileAvatar);
+
+      const sender = document.createElement('button');
+      sender.type = 'button';
+      sender.className = 'msg-sender-button';
+      sender.textContent = messageProfile.displayName || messageProfile.username;
+      sender.title = `View ${messageProfile.username}'s profile`;
+      sender.onclick = event => {
+        event.stopPropagation();
+        openProfileModal(messageProfile, messageProfile.username === currentUser.username);
+      };
+
+      const content = payload.message || payload.content || '';
+      const attachment = parseAttachmentPayload(content);
+
+      const meta = document.createElement('small');
+      meta.className = 'msg-meta';
+
+      const time = payload.timestamp
+        ? new Date(payload.timestamp).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : '';
+
+      meta.textContent = isMe ? `${time} · Sent ✓` : time;
+
+      bubble.appendChild(sender);
+
+      if (!isDeleted && payload.replyTo?.content) {
+        const replyPreview = document.createElement('button');
+        replyPreview.type = 'button';
+        replyPreview.className = 'message-reply-preview';
+        replyPreview.title = 'Replied message';
+
+        const replyAuthor = document.createElement('strong');
+        replyAuthor.textContent = payload.replyTo.username || 'Message';
+        const replyText = document.createElement('span');
+        replyText.textContent = payload.replyTo.content;
+
+        replyPreview.appendChild(replyAuthor);
+        replyPreview.appendChild(replyText);
+        bubble.appendChild(replyPreview);
+      }
+
+      if (isDeleted) {
+        const deletedText = document.createElement('p');
+        deletedText.className = 'deleted-message-text';
+        deletedText.textContent = isDeletedForMe
+          ? 'You removed this message for you.'
+          : 'This message was deleted.';
+        bubble.appendChild(deletedText);
+      } else if (attachment) {
+        renderAttachmentContent(bubble, attachment);
+      } else {
+        const text = document.createElement('p');
+        text.textContent = content;
+        bubble.appendChild(text);
+      }
+
+      bubble.appendChild(meta);
+      if (isMe) meta.textContent = time;
+
+      if (!isDeleted) {
+        const status = getMessageStatusState(payload);
+
+        if (isMe) {
+          const statusLabel = status.state === 'delivered'
+            ? 'Delivered'
+            : status.state === 'sent'
+              ? 'Sent'
+              : '';
+          meta.textContent = statusLabel ? `${time} · ${statusLabel}` : time;
+        }
+
+        const statusEl = document.createElement('span');
+        statusEl.className = `msg-status-indicator status-${status.state}`;
+        statusEl.title = status.state === 'seen'
+          ? `Seen by ${status.receipts.map(receipt => receipt.username).join(', ')}`
+          : status.state === 'delivered'
+            ? 'Delivered'
+            : 'Sent';
+
+        if (status.state === 'seen') {
+          el.classList.add('has-seen-avatar');
+          const seenNames = status.receipts.map(receipt => receipt.username).join(', ');
+          statusEl.dataset.seenNames = seenNames;
+          status.receipts.slice(0, 5).forEach(receipt => {
+            const seenAvatar = document.createElement('img');
+            seenAvatar.className = 'msg-seen-avatar';
+            seenAvatar.src = receipt.avatar;
+            seenAvatar.alt = `Seen by ${receipt.username}`;
+            statusEl.appendChild(seenAvatar);
+          });
+          el.appendChild(statusEl);
+        } else {
+          statusEl.innerHTML = '<span class="status-check">✓</span>';
+        }
+
+        if (isMe && status.state !== 'seen') bubble.appendChild(statusEl);
+      }
+
+      const reactions = document.createElement('div');
+      reactions.className = 'msg-reactions';
+      bubble.appendChild(reactions);
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      bubble.addEventListener('click', event => {
+        if (event.target.closest('button, .reaction-picker, .message-options-menu')) return;
+        if (!window.matchMedia('(hover: none)').matches && !('ontouchstart' in window)) return;
+        revealMessageActions(el);
+      });
+      bubble.addEventListener('touchstart', event => {
+        const touch = event.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      }, { passive: true });
+      bubble.addEventListener('touchend', event => {
+        const touch = event.changedTouches[0];
+        const dx = touch.clientX - touchStartX;
+        const dy = Math.abs(touch.clientY - touchStartY);
+
+        if (dx > 55 && dy < 36 && !isDeleted) {
+          setReplyTarget(payload);
+          revealMessageActions(el, true);
+          return;
+        }
+      }, { passive: true });
+
+      if (!isMe) el.appendChild(profileButton);
+      el.appendChild(bubble);
+
+      chatBox.appendChild(el);
+      if (!isDeleted && messageId) chatBox.appendChild(reactionPicker);
+      if (!isDeleted) renderMessageReactions(el, payload.reactions || {});
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function getMessageId(message) {
+      return String(message?._id || message?.id || '');
+    }
+
+    function hasMessage(message) {
+      const id = getMessageId(message);
+      return Boolean(id && messageElements.has(id));
+    }
+
+    function renderActiveRoomMessages() {
+      chatBox.innerHTML = '';
+      messageElements.clear();
+      activeRoomMessages.forEach(msg => appendChatMsg(msg));
+    }
+
+    function sendReaction(messageId, emoji) {
+      if (!messageId || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      socket.send(JSON.stringify({
+        type: 'reaction',
+        roomId: activeRoomId,
+        messageId,
+        emoji
+      }));
+    }
+
+    function openDeleteMessageModal(messageId, canDeleteEveryone = false) {
+      if (!messageId) return;
+
+      pendingDeleteMessageId = messageId;
+      pendingDeleteCanEveryone = canDeleteEveryone;
+
+      const everyoneChoice = document.querySelector('input[name="delete-message-choice"][value="everyone"]');
+      const meChoice = document.querySelector('input[name="delete-message-choice"][value="me"]');
+
+      everyoneChoice.disabled = !canDeleteEveryone;
+      everyoneChoice.closest('.delete-choice-row').classList.toggle('is-disabled', !canDeleteEveryone);
+
+      if (canDeleteEveryone) {
+        everyoneChoice.checked = true;
+      } else {
+        meChoice.checked = true;
+      }
+
+      document.getElementById('delete-message-modal').style.display = 'flex';
+    }
+
+    function closeDeleteMessageModal() {
+      document.getElementById('delete-message-modal').style.display = 'none';
+      pendingDeleteMessageId = null;
+      pendingDeleteCanEveryone = false;
+    }
+
+    function confirmDeleteMessage() {
+      if (!pendingDeleteMessageId || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      const selected = document.querySelector('input[name="delete-message-choice"]:checked');
+      const mode = selected ? selected.value : 'everyone';
+      const finalMode = mode === 'everyone' && !pendingDeleteCanEveryone ? 'me' : mode;
+
+      socket.send(JSON.stringify({
+        type: 'delete_message',
+        roomId: activeRoomId,
+        messageId: pendingDeleteMessageId,
+        mode: finalMode
+      }));
+
+      closeDeleteMessageModal();
+    }
+
+    function applyMessageDeletion(messageId, mode) {
+      activeRoomMessages = activeRoomMessages.map(message => {
+        const id = String(message._id || message.id || '');
+
+        if (id !== String(messageId)) return message;
+
+        return {
+          ...message,
+          deletedForEveryone: mode === 'everyone' || message.deletedForEveryone,
+          deletedForMe: mode === 'me' || message.deletedForMe,
+          reactions: mode === 'everyone' ? {} : message.reactions
+        };
+      });
+
+      renderActiveRoomMessages();
+    }
+
+    function updateMessageReactions(messageId, reactions) {
+      const messageEl = messageElements.get(String(messageId));
+
+      if (messageEl) {
+        renderMessageReactions(messageEl, reactions);
+      }
+    }
+
+    function renderMessageReactions(messageEl, reactions) {
+      const box = messageEl.querySelector('.msg-reactions');
+      if (!box) return;
+
+      box.innerHTML = '';
+
+      Object.entries(reactions || {}).forEach(([emoji, users]) => {
+        if (!users || users.length === 0) return;
+
+        const badge = document.createElement('span');
+        badge.className = 'reaction-badge';
+        badge.title = users.join(', ');
+        badge.textContent = `${emoji} ${users.length}`;
+        box.appendChild(badge);
+      });
+    }
+
+
+    function renderLoungeNotification() {
+      const button = document.getElementById('lounge-room-btn');
+      if (!button) return;
+
+      const unread = unreadCounts.lounge || 0;
+      button.classList.toggle('has-unread', unread > 0);
+      button.innerHTML = `
+        <span>Lounge Chat</span>
+        ${unread ? `<span class="badge-count">${unread}</span>` : ''}
+      `;
+    }
+
+        function renderOnlineUsers() {
+      const list = document.getElementById('online-users-list');
+      const searchValue =
+        document.getElementById('user-search').value.toLowerCase();
+      const onlineCount = allUsers.filter(
+        user => user.username !== currentUser?.username && isUserShownOnline(user)
+      ).length;
+
+      document.getElementById('direct-messages-title').textContent =
+        `Direct Messages${onlineCount > 0 ? ` (${onlineCount} online)` : ''}`;
+
+      list.innerHTML = '';
+
+      allUsers
+        .filter(user => user.username !== currentUser?.username)
+        .filter(user =>
+          user.username.toLowerCase().includes(searchValue)
+        )
+        .forEach(user => {
+          user = normalizeProfile(user);
+          const shownOnline = isUserShownOnline(user);
+          const canDm = canDirectMessageUser(user);
+          const dmRoomId =
+            `dm_${[currentUser.username, user.username]
+              .sort()
+              .join('_')}`;
+          const unread = unreadCounts[dmRoomId] || 0;
+
+          const div = document.createElement('div');
+          div.className = 'online-user';
+          div.classList.toggle('dm-disabled', !canDm);
+          div.title = canDm ? `Message ${user.username}` : getDmBlockedMessage(user);
+
+          div.innerHTML = `
+            <button type="button" class="story-avatar-btn dm-story-btn ${hasActiveStory(user) ? 'has-story' : ''}">
+              <img src="${user.avatar}" alt="">
+              ${hasActiveStory(user) ? '<span class="story-ring-dot"></span>' : ''}
+              ${user.note?.text ? `<span class="note-bubble">${user.note.text}</span>` : ''}
+            </button>
+            <div class="user-info">
+              <div class="user-line">
+                <span>${user.username}</span>
+                ${unread ? `<span class="badge-count">${unread}</span>` : ''}
+              </div>
+              <div class="status-row">
+                <span class="status-dot ${shownOnline ? 'online' : 'offline'}"></span>
+                <small class="${shownOnline ? 'online-status' : 'offline-status'}">
+                  ${shownOnline ? 'Online' : (user.privacy.showOnlineStatus ? 'Offline' : 'Hidden')}
+                </small>
+              </div>
+            </div>
+          `;
+
+          div.onclick = () => {
+            if (!canDm) {
+              appendSystemMsg(getDmBlockedMessage(user));
+              openProfileModal(user, false);
+              return;
+            }
+
+            switchRoom(dmRoomId, user.username);
+          };
+
+          div.querySelector('.dm-story-btn').onclick = event => {
+            event.stopPropagation();
+            openStoryOrProfile(user, false);
+          };
+
+          const noteBubble = div.querySelector('.note-bubble');
+          if (noteBubble) {
+            noteBubble.onclick = event => openNoteBubbleStory(user, false, event);
+          }
+
+          list.appendChild(div);
+        });
+    }
+
+    function renderGroups() {
+      const list = document.getElementById('groups-list');
+      list.innerHTML = '';
+
+      if (!allGroups.length) {
+        renderGroupListMessage('No group conversations yet.');
+        return;
+      }
+
+      allGroups.forEach(group => {
+        const roomId = `group_${group._id}`;
+        const unread = unreadCounts[roomId] || 0;
+        const avatarSrc = group.avatarThumb || group.avatar || '';
+        const groupAvatar = avatarSrc
+          ? `<img src="${avatarSrc}" alt="">`
+          : '';
+
+        const div = document.createElement('div');
+        div.className = 'group-item';
+
+        div.innerHTML = `
+          <div class="group-avatar">👥</div>
+          <div class="group-meta">
+            <div class="group-line">
+              <strong>${group.name}</strong>
+              ${unread ? `<span class="badge-count">${unread}</span>` : ''}
+            </div>
+            <small>${group.members?.length || 0} members</small>
+          </div>
+        `;
+
+        if (groupAvatar) {
+          div.querySelector('.group-avatar').innerHTML = groupAvatar;
+        }
+
+        div.onclick = () =>
+          switchRoom(
+            `group_${group._id}`,
+            group.name
+          );
+
+        list.appendChild(div);
+      });
+    }
+
+    function renderGroupListMessage(message) {
+      const list = document.getElementById('groups-list');
+      if (!list) return;
+
+      list.innerHTML = `<div class="group-list-message">${message}</div>`;
+    }
+
+    function showMobileChat() {
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        document.body.classList.add('mobile-chat-open');
+      }
+    }
+
+    function showMobileSidebar() {
+      document.body.classList.remove('mobile-chat-open');
+      messageInput?.blur();
+    }
+
+    function switchRoom(roomId, title = null) {
+      if (roomId.startsWith('dm_')) {
+        const targetUsername = getDmTargetUsername(roomId);
+        const targetUser = getUserByUsername(targetUsername);
+
+        if (targetUser && !canDirectMessageUser(targetUser)) {
+          appendSystemMsg(getDmBlockedMessage(targetUser));
+          openProfileModal(targetUser, false);
+          return;
+        }
+      }
+
+      activeRoomId = roomId;
+      showMobileChat();
+      clearReplyPreview();
+      if (roomId.startsWith('dm_')) {
+        loadRoomChatTheme(roomId);
+      } else {
+        clearChatBackground();
+      }
+      viewMembersBtn.classList.toggle(
+        'is-visible',
+        roomId === 'lounge' || roomId.startsWith('group_') || roomId.startsWith('dm_')
+      );
+
+      if (unreadCounts[roomId]) {
+        delete unreadCounts[roomId];
+        renderLoungeNotification();
+        renderOnlineUsers();
+        renderGroups();
+      }
+
+      chatBox.innerHTML = '';
+      messageElements.clear();
+      activeRoomMessages = [];
+
+      if (roomId === 'lounge') {
+        document.getElementById('room-title').textContent =
+          'Lounge';
+
+        document.getElementById('room-subtitle').textContent =
+          'Global real-time chat room';
+      }
+
+      else if (roomId.startsWith('dm_')) {
+        document.getElementById('room-title').textContent =
+          title || 'Direct Message';
+
+        document.getElementById('room-subtitle').textContent =
+          'Private conversation';
+      }
+
+      else {
+        document.getElementById('room-title').textContent =
+          title || 'Group Chat';
+
+        document.getElementById('room-subtitle').textContent =
+          'Group conversation';
+      }
+
+      if (
+        socket &&
+        socket.readyState === WebSocket.OPEN
+      ) {
+        socket.send(
+          JSON.stringify({
+            type: 'get_history',
+            roomId: activeRoomId
+          })
+        );
+      }
+    }
+
+    document
+      .getElementById('user-search')
+      .addEventListener('input', renderOnlineUsers);
+
+    function openCreateGroupModal() {
+      document.getElementById('group-modal').style.display = 'flex';
+      document.getElementById('group-name').value = '';
+
+      const box =
+        document.getElementById('group-members-select');
+
+      box.innerHTML = '';
+
+      allUsers.forEach(user => {
+        if (user.username === currentUser.username) return;
+
+        const label = document.createElement('label');
+        label.className = 'member-pick-row';
+
+        label.innerHTML = `
+          <img src="${user.avatar}" alt="">
+          <span class="member-pick-meta">
+            <strong>${user.username}</strong>
+            <small>${user.bio || 'Infinity Chat user'}</small>
+          </span>
+          <input
+            type="checkbox"
+            name="members"
+            value="${user.username}"
+          >
+        `;
+
+        box.appendChild(label);
+      });
+    }
+
+    function closeCreateGroupModal() {
+      document.getElementById('group-modal').style.display = 'none';
+    }
+
+    function closeManageGroupModal() {
+      document.getElementById('manage-group-modal').style.display = 'none';
+    }
+
+    function openRoomInfoModal() {
+      const group = getActiveGroup();
+      const isLounge = activeRoomId === 'lounge';
+      const isDm = activeRoomId.startsWith('dm_');
+      if (!group && !isLounge && !isDm) return;
+
+      const dmTarget = isDm ? getUserByUsername(getDmTargetUsername(activeRoomId)) : null;
+      const roomInfoPanel = document.querySelector('.room-info-modal');
+      roomInfoPanel?.classList.toggle('is-dm-info', isDm);
+
+      document.getElementById('room-info-title').textContent =
+        isLounge
+          ? 'Lounge Info'
+          : isDm
+            ? `${dmTarget?.displayName || dmTarget?.username || 'Direct Message'} Info`
+            : `${group.name} Info`;
+
+      document.getElementById('room-info-members-btn').style.display =
+        isLounge || isDm ? 'none' : 'block';
+      document.getElementById('room-info-menu-btn').style.display =
+        isLounge || isDm ? 'none' : 'grid';
+      document.getElementById('room-info-menu').style.display = 'none';
+      document.getElementById('room-info-chat-background').style.display =
+        isDm ? 'grid' : 'none';
+      if (isDm) loadRoomChatTheme(activeRoomId);
+
+      document.getElementById('room-info-modal').style.display = 'flex';
+    }
+
+    function closeRoomInfoModal() {
+      document.getElementById('room-info-modal').style.display = 'none';
+      document.getElementById('room-info-menu').style.display = 'none';
+      document.querySelector('.room-info-modal')?.classList.remove('is-dm-info');
+    }
+
+    function toggleRoomInfoMenu(event) {
+      event.stopPropagation();
+      const menu = document.getElementById('room-info-menu');
+      menu.style.display = menu.style.display === 'none' ? 'grid' : 'none';
+    }
+
+    function closeRoomInfoMenu() {
+      document.getElementById('room-info-menu').style.display = 'none';
+    }
+
+    function openChatHeadFromInfo() {
+      closeRoomInfoModal();
+      chatBox.scrollTop = chatBox.scrollHeight;
+      messageInput.focus();
+    }
+
+    function requireGroupMember(group) {
+      if (!group || !(group.members || []).includes(currentUser.username)) {
+        alert('Only group members can use this option.');
+        return false;
+      }
+
+      return true;
+    }
+
+    async function updateActiveGroupInfo(updates, options = {}) {
+      const group = getActiveGroup();
+      if (!requireGroupMember(group)) return null;
+
+      try {
+        const token = localStorage.getItem('chat_token');
+        const res = await fetch(`/api/groups/${group._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(updates)
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          showAppToast(data.error || 'Unable to update group.');
+          return null;
+        }
+
+        if (!options.skipRefresh) {
+          await fetchUsersAndGroups();
+          const updatedGroup = getActiveGroup();
+          if (updatedGroup) {
+            syncActiveGroupTitles();
+          }
+        }
+
+        closeRoomInfoMenu();
+        return data.group;
+      } catch (err) {
+        console.error('Unable to update group info:', err);
+        showAppToast('Unable to update group. Please try again.');
+        return null;
+      }
+    }
+
+    function setGroupSaveButtonState(buttonId, isSaving, savingText = 'Saving...') {
+      const button = document.getElementById(buttonId);
+      if (!button) return null;
+
+      if (!button.dataset.defaultText) {
+        button.dataset.defaultText = button.textContent;
+      }
+
+      button.disabled = isSaving;
+      button.classList.toggle('is-loading', isSaving);
+      button.textContent = isSaving ? savingText : button.dataset.defaultText;
+      return button;
+    }
+
+    function openGroupPhotoPicker() {
+      const group = getActiveGroup();
+      if (!requireGroupMember(group)) return;
+      closeRoomInfoMenu();
+      document.getElementById('group-photo-input').click();
+    }
+
+    function changeGroupName() {
+      const group = getActiveGroup();
+      if (!requireGroupMember(group)) return;
+
+      closeRoomInfoMenu();
+      const input = document.getElementById('group-name-editor-input');
+      input.value = group.name || '';
+      document.getElementById('group-name-editor-modal').style.display = 'flex';
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 0);
+    }
+
+    function closeGroupNameEditor() {
+      document.getElementById('group-name-editor-modal').style.display = 'none';
+      setGroupSaveButtonState('group-name-save-btn', false);
+    }
+
+    async function saveGroupNameEditor() {
+      const group = getActiveGroup();
+      if (!requireGroupMember(group)) return;
+
+      const saveButton = document.getElementById('group-name-save-btn');
+      if (saveButton?.disabled) return;
+
+      const input = document.getElementById('group-name-editor-input');
+      const name = input.value.trim().slice(0, 40);
+      if (!name) {
+        showAppToast('Group name is required.');
+        input.focus();
+        return;
+      }
+
+      if (name === group.name) {
+        showAppToast('Group name is already saved.');
+        closeGroupNameEditor();
+        return;
+      }
+
+      const oldName = group.name;
+      const groupIndex = allGroups.findIndex(item => String(item._id) === String(group._id));
+
+      if (groupIndex >= 0) {
+        allGroups[groupIndex] = {
+          ...allGroups[groupIndex],
+          name
+        };
+      }
+
+      syncActiveGroupTitles();
+      renderGroups();
+      closeGroupNameEditor();
+      showAppToast('Saving group name...');
+
+      try {
+        const updated = await updateActiveGroupInfo(
+          { name },
+          { skipRefresh: true }
+        );
+        if (updated) {
+          showAppToast('Group name saved.');
+        } else {
+          if (groupIndex >= 0) {
+            allGroups[groupIndex] = {
+              ...allGroups[groupIndex],
+              name: oldName
+            };
+            syncActiveGroupTitles();
+            renderGroups();
+          }
+        }
+      } catch (err) {
+        if (groupIndex >= 0) {
+          allGroups[groupIndex] = {
+            ...allGroups[groupIndex],
+            name: oldName
+          };
+          syncActiveGroupTitles();
+          renderGroups();
+        }
+        showAppToast('Unable to save group name. Please try again.');
+      }
+    }
+
+    function closeGroupPhotoEditor() {
+      document.getElementById('group-photo-editor-modal').style.display = 'none';
+      document.getElementById('group-photo-editor-stage').classList.remove('is-dragging');
+      document.getElementById('group-photo-editor-image').removeAttribute('src');
+      groupPhotoEditorState = null;
+      setGroupSaveButtonState('group-photo-save-btn', false);
+    }
+
+    function fitGroupPhotoToStage() {
+      if (!groupPhotoEditorState) return;
+
+      const stage = document.getElementById('group-photo-editor-stage');
+      const img = document.getElementById('group-photo-editor-image');
+      const stageRect = stage.getBoundingClientRect();
+      const baseScale = Math.max(
+        stageRect.width / groupPhotoEditorState.naturalWidth,
+        stageRect.height / groupPhotoEditorState.naturalHeight
+      );
+
+      groupPhotoEditorState.stageWidth = stageRect.width;
+      groupPhotoEditorState.stageHeight = stageRect.height;
+      groupPhotoEditorState.baseScale = baseScale;
+      img.style.width = `${groupPhotoEditorState.naturalWidth}px`;
+      img.style.height = `${groupPhotoEditorState.naturalHeight}px`;
+      renderGroupPhotoEditor();
+    }
+
+    function renderGroupPhotoEditor() {
+      if (!groupPhotoEditorState) return;
+
+      const img = document.getElementById('group-photo-editor-image');
+      const scale = groupPhotoEditorState.baseScale * groupPhotoEditorState.zoom;
+      img.style.transform =
+        `translate(-50%, -50%) translate(${groupPhotoEditorState.x}px, ${groupPhotoEditorState.y}px) scale(${scale})`;
+    }
+
+    function openGroupPhotoEditor(src) {
+      const modal = document.getElementById('group-photo-editor-modal');
+      const img = document.getElementById('group-photo-editor-image');
+      const zoom = document.getElementById('group-photo-zoom');
+
+      img.onload = () => {
+        groupPhotoEditorState = {
+          src,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          stageWidth: 0,
+          stageHeight: 0,
+          baseScale: 1,
+          zoom: 1,
+          x: 0,
+          y: 0,
+          dragging: false,
+          startPointerX: 0,
+          startPointerY: 0,
+          startX: 0,
+          startY: 0
+        };
+        zoom.value = '1';
+        modal.style.display = 'flex';
+        requestAnimationFrame(fitGroupPhotoToStage);
+      };
+
+      img.onerror = () => alert('Unable to load group photo.');
+      img.src = src;
+    }
+
+    function drawEditedGroupPhoto(size = null, mimeType = 'image/jpeg', quality = 0.82) {
+      if (!groupPhotoEditorState) return '';
+
+      const img = document.getElementById('group-photo-editor-image');
+      const state = groupPhotoEditorState;
+      const canvas = document.createElement('canvas');
+      const outputWidth = size || state.naturalWidth;
+      const outputHeight = size || state.naturalHeight;
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(
+        state.x * (canvas.width / state.stageWidth),
+        state.y * (canvas.height / state.stageHeight)
+      );
+      ctx.scale(
+        state.baseScale * state.zoom * (canvas.width / state.stageWidth),
+        state.baseScale * state.zoom * (canvas.height / state.stageHeight)
+      );
+      ctx.drawImage(img, -state.naturalWidth / 2, -state.naturalHeight / 2);
+      ctx.restore();
+
+      return canvas.toDataURL(mimeType, quality);
+    }
+
+    async function saveGroupPhotoEditor() {
+      const group = getActiveGroup();
+      if (!requireGroupMember(group) || !groupPhotoEditorState) return;
+
+      const saveButton = document.getElementById('group-photo-save-btn');
+      if (saveButton?.disabled) return;
+
+      const img = document.getElementById('group-photo-editor-image');
+      const state = groupPhotoEditorState;
+      if (!state.stageWidth || !state.stageHeight || !img.complete) {
+        fitGroupPhotoToStage();
+        showAppToast('Photo is still loading. Try again in a moment.');
+        return;
+      }
+
+      setGroupSaveButtonState('group-photo-save-btn', true, 'Saving...');
+      let saved = false;
+
+      try {
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const avatar = drawEditedGroupPhoto(320, 'image/jpeg', 0.76);
+        const avatarThumb = drawEditedGroupPhoto(96, 'image/jpeg', 0.68);
+
+        const groupIndex = allGroups.findIndex(item => String(item._id) === String(group._id));
+        if (groupIndex >= 0) {
+          allGroups[groupIndex] = {
+            ...allGroups[groupIndex],
+            avatar,
+            avatarThumb
+          };
+          renderGroups();
+        }
+
+        closeGroupPhotoEditor();
+        showAppToast('Uploading group photo...');
+
+        const updated = await updateActiveGroupInfo(
+          { avatar, avatarThumb },
+          { skipRefresh: true }
+        );
+        if (updated) {
+          saved = true;
+          showAppToast('Group photo successfully uploaded.');
+        }
+      } catch (err) {
+        console.error('Group photo save failed:', err);
+        showAppToast(err.message || 'Unable to save group photo.');
+      } finally {
+        if (!saved) {
+          setGroupSaveButtonState('group-photo-save-btn', false);
+        }
+      }
+    }
+
+    async function deleteGroupConversation() {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      closeRoomInfoMenu();
+      const confirmed = await showConfirm(
+        `Delete all messages in ${group.name}? This clears the group conversation history.`,
+        'Delete Conversation'
+      );
+
+      if (!confirmed) return;
+
+      const token = localStorage.getItem('chat_token');
+      const res = await fetch(`/api/groups/${group._id}/conversation`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Unable to delete conversation.');
+        return;
+      }
+
+      activeRoomMessages = [];
+      readReceipts[activeRoomId] = {};
+      renderActiveRoomMessages();
+      closeRoomInfoModal();
+    }
+
+    async function leaveActiveGroup() {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      closeRoomInfoMenu();
+      const confirmed = await showConfirm(
+        `Leave ${group.name}?`,
+        'Leave Group'
+      );
+
+      if (!confirmed) return;
+
+      const token = localStorage.getItem('chat_token');
+      const res = await fetch(`/api/groups/${group._id}/leave`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Unable to leave group.');
+        return;
+      }
+
+      await fetchUsersAndGroups();
+      closeRoomInfoModal();
+      switchRoom('lounge');
+    }
+
+    async function reportTechnicalProblem() {
+      const group = getActiveGroup();
+      closeRoomInfoMenu();
+      const message = prompt('Describe the technical problem:');
+      if (!message || !message.trim()) return;
+
+      const token = localStorage.getItem('chat_token');
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          roomId: activeRoomId,
+          category: 'technical_problem',
+          message: `[${group?.name || activeRoomId}] ${message.trim()}`
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Unable to submit report.');
+        return;
+      }
+
+      alert('Report submitted. Thank you.');
+    }
+
+    document.getElementById('group-photo-input').addEventListener('change', event => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please choose an image file.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => openGroupPhotoEditor(reader.result);
+      reader.onerror = () => alert('Unable to read group photo.');
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('group-photo-zoom').addEventListener('input', event => {
+      if (!groupPhotoEditorState) return;
+      groupPhotoEditorState.zoom = Number(event.target.value) || 1;
+      renderGroupPhotoEditor();
+    });
+
+    document.getElementById('group-photo-editor-stage').addEventListener('pointerdown', event => {
+      if (!groupPhotoEditorState) return;
+
+      const stage = event.currentTarget;
+      groupPhotoEditorState.dragging = true;
+      groupPhotoEditorState.startPointerX = event.clientX;
+      groupPhotoEditorState.startPointerY = event.clientY;
+      groupPhotoEditorState.startX = groupPhotoEditorState.x;
+      groupPhotoEditorState.startY = groupPhotoEditorState.y;
+      stage.classList.add('is-dragging');
+      stage.setPointerCapture(event.pointerId);
+    });
+
+    document.getElementById('group-photo-editor-stage').addEventListener('pointermove', event => {
+      if (!groupPhotoEditorState?.dragging) return;
+
+      groupPhotoEditorState.x =
+        groupPhotoEditorState.startX + event.clientX - groupPhotoEditorState.startPointerX;
+      groupPhotoEditorState.y =
+        groupPhotoEditorState.startY + event.clientY - groupPhotoEditorState.startPointerY;
+      renderGroupPhotoEditor();
+    });
+
+    function stopGroupPhotoDrag(event) {
+      if (!groupPhotoEditorState) return;
+
+      groupPhotoEditorState.dragging = false;
+      event.currentTarget.classList.remove('is-dragging');
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch (err) {}
+    }
+
+    document.getElementById('group-photo-editor-stage').addEventListener('pointerup', stopGroupPhotoDrag);
+    document.getElementById('group-photo-editor-stage').addEventListener('pointercancel', stopGroupPhotoDrag);
+
+    function openGroupMembersFromInfo() {
+      closeRoomInfoModal();
+      openGroupMembersModal();
+    }
+
+    function openMediaModal() {
+      renderMediaList();
+      document.getElementById('media-modal').style.display = 'flex';
+    }
+
+    function closeMediaModal() {
+      document.getElementById('media-modal').style.display = 'none';
+    }
+
+    function renderMediaList() {
+      const list = document.getElementById('media-list');
+      const items = getRoomAttachments();
+
+      list.innerHTML = '';
+
+      if (items.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'media-empty';
+        empty.textContent = 'No files, photos, or videos have been uploaded here yet.';
+        list.appendChild(empty);
+        return;
+      }
+
+      items.forEach(({ message, attachment }) => {
+        const item = document.createElement('div');
+        item.className = 'media-item';
+
+        renderAttachmentContent(item, attachment);
+
+        const meta = document.createElement('small');
+        meta.textContent = `${message.username || message.sender || 'User'}${
+          message.timestamp
+            ? ` · ${new Date(message.timestamp).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}`
+            : ''
+        }`;
+
+        item.appendChild(meta);
+        list.appendChild(item);
+      });
+    }
+
+    function showConfirm(message, title = 'Confirm Action') {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      document.getElementById('confirm-modal').style.display = 'flex';
+
+      return new Promise(resolve => {
+        pendingConfirmResolve = resolve;
+      });
+    }
+
+    function resolveConfirm(confirmed) {
+      document.getElementById('confirm-modal').style.display = 'none';
+
+      if (pendingConfirmResolve) {
+        pendingConfirmResolve(confirmed);
+        pendingConfirmResolve = null;
+      }
+    }
+
+    function openGroupMembersModal() {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const box = document.getElementById('manage-group-members');
+      const isAdmin = group.creator === currentUser.username;
+
+      document.getElementById('manage-group-title').textContent =
+        `${group.name} Members`;
+
+      box.innerHTML = '';
+
+      group.members.forEach(username => {
+        const user = getUserByUsername(username);
+        const row = document.createElement('div');
+        row.className = 'group-member-row';
+
+        const profileButton = document.createElement('button');
+        profileButton.type = 'button';
+        profileButton.className = 'member-profile-button';
+        profileButton.onclick = () => openProfileModal(user, username === currentUser.username);
+
+        profileButton.innerHTML = `
+          <img src="${user.avatar}" alt="">
+          <span class="member-profile-meta">
+            <strong>${user.username}</strong>
+            <small>${user.bio || 'Infinity Chat user'}</small>
+          </span>
+        `;
+
+        row.appendChild(profileButton);
+
+        if (username === group.creator) {
+          const adminBadge = document.createElement('span');
+          adminBadge.className = 'admin-badge';
+          adminBadge.textContent = 'Admin';
+          row.appendChild(adminBadge);
+        }
+
+        if (isAdmin && username !== group.creator) {
+          const deleteButton = document.createElement('button');
+          deleteButton.type = 'button';
+          deleteButton.className = 'delete-member-btn';
+          deleteButton.textContent = 'Remove Member';
+          deleteButton.onclick = () => deleteGroupMember(username);
+          row.appendChild(deleteButton);
+        }
+
+        box.appendChild(row);
+      });
+
+      renderAddMemberPanel(group, isAdmin);
+
+      document.getElementById('manage-group-modal').style.display = 'flex';
+    }
+
+    function renderAddMemberPanel(group, isAdmin) {
+      const panel = document.getElementById('add-group-member-panel');
+      panel.innerHTML = '';
+
+      if (!isAdmin) return;
+
+      const availableUsers = allUsers.filter(user =>
+        user.username !== currentUser.username &&
+        !group.members.some(member => member.toLowerCase() === user.username.toLowerCase())
+      );
+
+      const addButton = document.createElement('button');
+      addButton.type = 'button';
+      addButton.className = 'add-member-toggle-btn';
+      addButton.textContent = 'Add Member';
+
+      const picker = document.createElement('div');
+      picker.className = 'add-member-picker';
+      picker.style.display = 'none';
+
+      addButton.onclick = () => {
+        picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+      };
+
+      if (availableUsers.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'add-member-empty';
+        empty.textContent = 'All users are already in this group.';
+        picker.appendChild(empty);
+      } else {
+        availableUsers.forEach(user => {
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'add-member-row';
+          row.onclick = () => addGroupMember(user.username);
+
+          row.innerHTML = `
+            <img src="${user.avatar}" alt="">
+            <span class="member-pick-meta">
+              <strong>${user.username}</strong>
+              <small>${user.bio || 'Infinity Chat user'}</small>
+            </span>
+            <span class="add-member-plus">Add</span>
+          `;
+
+          picker.appendChild(row);
+        });
+      }
+
+      panel.appendChild(addButton);
+      panel.appendChild(picker);
+    }
+
+    async function addGroupMember(username) {
+      const group = getActiveGroup();
+      if (!group || group.creator !== currentUser.username) return;
+
+      const confirmed = await showConfirm(
+        `Add ${username} to ${group.name}?`,
+        'Add Group Member'
+      );
+
+      if (!confirmed) return;
+
+      const token = localStorage.getItem('chat_token');
+      const members = Array.from(new Set([...group.members, username]));
+
+      const res = await fetch(`/api/groups/${group._id}/members`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ members })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Failed to add member.');
+        return;
+      }
+
+      await fetchUsersAndGroups();
+      openGroupMembersModal();
+    }
+
+    async function deleteGroupMember(username) {
+      const group = getActiveGroup();
+      if (!group || group.creator !== currentUser.username || username === group.creator) return;
+
+      const confirmed = await showConfirm(
+        `Remove ${username} from ${group.name}?`,
+        'Remove Group Member'
+      );
+
+      if (!confirmed) return;
+
+      const token = localStorage.getItem('chat_token');
+      const members = group.members.filter(member => member !== username);
+
+      const res = await fetch(`/api/groups/${group._id}/members`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ members })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Failed to delete member.');
+        return;
+      }
+
+      await fetchUsersAndGroups();
+      openGroupMembersModal();
+    }
+
+    async function createGroup() {
+      const name =
+        document.getElementById('group-name')
+          .value
+          .trim();
+
+      const checked =
+        document.querySelectorAll(
+          'input[name="members"]:checked'
+        );
+
+      const members =
+        Array.from(checked)
+          .map(c => c.value);
+
+      if (!name || members.length === 0) {
+        alert(
+          'Enter group name and select members.'
+        );
+        return;
+      }
+
+      const token =
+        localStorage.getItem('chat_token');
+
+      const res = await fetch(
+        '/api/groups',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name,
+            members
+          })
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+
+        closeCreateGroupModal();
+
+        await fetchUsersAndGroups();
+
+        switchRoom(
+          `group_${data.group._id}`,
+          data.group.name
+        );
+      }
+
+      else {
+        alert(
+          data.error ||
+          'Failed to create group.'
+        );
+      }
+    }
+
+    function normalizeProfile(user) {
+      const privacy = user.privacy || {};
+      const stories = getActiveStories(user);
+
+      return {
+        ...user,
+        displayName: user.displayName || user.username,
+        coverPhoto: user.coverPhoto || '',
+        bio: user.bio || 'Infinity Chat user',
+        aboutMe: user.aboutMe || '',
+        customStatus: user.customStatus || '',
+        story: stories[0] || null,
+        stories,
+        note: user.note?.text ? user.note : null,
+        profileTheme: user.profileTheme || 'neon-pink',
+        chatBackground: normalizeChatTheme(user.chatBackground),
+        privacy: {
+          showOnlineStatus: privacy.showOnlineStatus !== false,
+          showLastSeen: privacy.showLastSeen !== false,
+          allowDirectMessages: privacy.allowDirectMessages !== false,
+          allowProfileViewing: privacy.allowProfileViewing !== false
+        }
+      };
+    }
+
+    function formatProfileDate(value, fallback = 'Not available') {
+      if (!value) return fallback;
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return fallback;
+
+      return date.toLocaleDateString([], {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    function applyProfileModalTheme(theme = 'neon-pink') {
+      const allowedThemes = ['neon-pink', 'purple', 'blue', 'green', 'dark'];
+      const nextTheme = allowedThemes.includes(theme) ? theme : 'neon-pink';
+      const modal = document.querySelector('.profile-modal');
+
+      if (modal) {
+        modal.classList.remove(...allowedThemes.map(item => `profile-theme-${item}`));
+        modal.classList.add(`profile-theme-${nextTheme}`);
+      }
+
+      document.querySelectorAll('.theme-swatch').forEach(button => {
+        button.classList.toggle('is-selected', button.dataset.theme === nextTheme);
+      });
+    }
+
+    function applyProfileTheme(theme = 'neon-pink') {
+      const allowedThemes = ['neon-pink', 'purple', 'blue', 'green', 'dark'];
+      const nextTheme = allowedThemes.includes(theme) ? theme : 'neon-pink';
+
+      applyProfileModalTheme(nextTheme);
+      document.body.classList.remove(...allowedThemes.map(item => `app-theme-${item}`));
+      document.body.classList.add(`app-theme-${nextTheme}`);
+    }
+
+    function selectProfileTheme(theme) {
+      document.getElementById('profile-theme').value = theme;
+      applyProfileTheme(theme);
+      if (currentUser) currentUser.profileTheme = theme;
+    }
+
+    function applyChatBackground(background = 'pink-dream') {
+      const nextBackground = normalizeChatTheme(background);
+
+      document.body.classList.remove(...chatThemeClassIds.map(item => `chat-bg-${item}`));
+      document.body.classList.add(`chat-bg-${nextBackground}`);
+
+      const select = document.getElementById('chat-background');
+      if (select) select.value = nextBackground;
+
+      document.querySelectorAll('.chat-bg-swatch').forEach(button => {
+        button.classList.toggle('is-selected', button.dataset.bg === nextBackground);
+      });
+    }
+
+    function clearChatBackground() {
+      document.body.classList.remove(...chatThemeClassIds.map(item => `chat-bg-${item}`));
+      const select = document.getElementById('chat-background');
+      if (select) select.value = 'pink-dream';
+      document.querySelectorAll('.chat-bg-swatch').forEach(button => {
+        button.classList.remove('is-selected');
+      });
+    }
+
+    async function loadRoomChatTheme(roomId = activeRoomId) {
+      if (!roomId?.startsWith('dm_')) {
+        clearChatBackground();
+        return null;
+      }
+
+      if (roomThemes[roomId]) {
+        applyChatBackground(roomThemes[roomId]);
+        return roomThemes[roomId];
+      }
+
+      try {
+        const res = await fetch(`/api/rooms/${encodeURIComponent(roomId)}/theme`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('chat_token')}` }
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(data.error || 'Unable to load chat theme.');
+
+        roomThemes[roomId] = normalizeChatTheme(data.chatTheme);
+        if (roomId === activeRoomId) applyChatBackground(roomThemes[roomId]);
+        return roomThemes[roomId];
+      } catch (err) {
+        console.warn('Unable to load room chat theme:', err);
+        roomThemes[roomId] = 'pink-dream';
+        if (roomId === activeRoomId) applyChatBackground(roomThemes[roomId]);
+        return roomThemes[roomId];
+      }
+    }
+
+    async function selectChatBackground(background, persist = true) {
+      const nextBackground = normalizeChatTheme(background);
+      const roomId = activeRoomId;
+
+      applyChatBackground(nextBackground);
+      if (roomId?.startsWith('dm_')) roomThemes[roomId] = nextBackground;
+      if (!persist || !currentUser || !roomId?.startsWith('dm_')) return;
+
+      try {
+        const res = await fetch(`/api/rooms/${encodeURIComponent(roomId)}/theme`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('chat_token')}`
+          },
+          body: JSON.stringify({ chatTheme: nextBackground })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Unable to save chat theme.');
+
+        roomThemes[roomId] = normalizeChatTheme(data.chatTheme);
+        applyChatBackground(roomThemes[roomId]);
+        showAppToast('Chat theme saved.');
+      } catch (err) {
+        console.error('Unable to save chat theme:', err);
+        showAppToast('Unable to save chat theme.');
+      }
+    }
+
+    function setProfileFieldState(editable, profile = {}, canViewProfile = true) {
+      [
+        'profile-display-name',
+        'profile-custom-status',
+        'profile-note',
+        'profile-bio',
+        'profile-about'
+      ].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+          field.readOnly = !editable;
+          field.disabled = false;
+        }
+      });
+
+      const modal = document.querySelector('.profile-modal');
+      modal?.classList.toggle('is-view-only', !editable);
+      modal?.classList.toggle('is-private-view', !editable && !canViewProfile);
+
+      const toggleFieldSection = (fieldId, visible) => {
+        const field = document.getElementById(fieldId);
+        const section = field?.closest('.profile-section');
+        if (section) section.style.display = visible ? '' : 'none';
+      };
+
+      document.querySelector('.profile-badges').style.display =
+        canViewProfile ? '' : 'none';
+      document.querySelector('.profile-stats').style.display =
+        canViewProfile ? '' : 'none';
+      document.querySelector('.profile-activity').style.display =
+        canViewProfile ? '' : 'none';
+
+      toggleFieldSection('profile-custom-status', editable || Boolean(canViewProfile && profile.customStatus));
+      toggleFieldSection('profile-note', editable || Boolean(canViewProfile && profile.note?.text));
+      toggleFieldSection('profile-bio', editable || canViewProfile);
+      toggleFieldSection('profile-about', editable || Boolean(canViewProfile && profile.aboutMe));
+
+      document.getElementById('profile-cover-upload-label').style.display =
+        editable ? 'inline-flex' : 'none';
+      document.getElementById('profile-status-emoji-btn').style.display =
+        editable ? 'grid' : 'none';
+      document.getElementById('profile-bio-emoji-tools').style.display =
+        editable ? 'flex' : 'none';
+      document.getElementById('profile-edit-area').style.display =
+        editable ? 'block' : 'none';
+
+      document.getElementById('cover-editor').style.display =
+        editable ? document.getElementById('cover-editor').style.display : 'none';
+      document.getElementById('crop-editor').style.display =
+        editable ? document.getElementById('crop-editor').style.display : 'none';
+    }
+
+    function renderProfileStats(user) {
+      const loadedRoomMessageCount = activeRoomMessages.filter(
+        message => (message.username || message.sender) === user.username
+      ).length;
+      const savedMessageCount = parseInt(
+        user.messages || user.messageCount || user.totalMessages || 0,
+        10
+      );
+      const messageCount = Number.isNaN(savedMessageCount)
+        ? loadedRoomMessageCount
+        : Math.max(savedMessageCount, loadedRoomMessageCount);
+      const groupCount = allGroups.filter(group =>
+        (group.members || []).includes(user.username)
+      ).length;
+      const friendCount = Math.max(
+        0,
+        allUsers.filter(item => item.username !== user.username).length
+      );
+
+      document.getElementById('profile-stat-messages').textContent = messageCount;
+      document.getElementById('profile-stat-groups').textContent = groupCount;
+      document.getElementById('profile-stat-friends').textContent = friendCount;
+    }
+
+    function renderProfileBadges(user) {
+      const messageCount = parseInt(
+        user.messages || user.messageCount || user.totalMessages || 0,
+        10
+      );
+      const savedGroupCount = parseInt(user.groupsCount || user.groupCount || 0, 10);
+      const groupCount = Number.isNaN(savedGroupCount)
+        ? allGroups.filter(group => (group.members || []).includes(user.username)).length
+        : Math.max(
+            savedGroupCount,
+            allGroups.filter(group => (group.members || []).includes(user.username)).length
+          );
+      const badges = [
+        {
+          id: 'badge-active-user',
+          earned: !Number.isNaN(messageCount) && messageCount >= 10
+        },
+        {
+          id: 'badge-early-member',
+          earned: user.isEarlyMember === true
+        },
+        {
+          id: 'badge-top-contributor',
+          earned: messageCount > 500 || groupCount > 5
+        }
+      ];
+
+      badges.forEach(badge => {
+        document.getElementById(badge.id)?.classList.toggle('badge-locked', !badge.earned);
+      });
+    }
+
+    function renderProfileActivity(user, editable) {
+      const list = document.getElementById('profile-activity-list');
+      const activities = [
+        editable ? 'Updated profile' : `Viewed @${user.username}`,
+        user.avatar ? 'Changed profile picture' : 'Selected default avatar',
+        'Joined Infinity Chat'
+      ];
+
+      list.innerHTML = activities
+        .map(activity => `<li>${activity}</li>`)
+        .join('');
+    }
+
+    function openProfileModal(user, editable = false) {
+      const profile = normalizeProfile(user);
+      const isOwnerProfile = currentUser?.username === profile.username;
+      const canEditProfile = editable && isOwnerProfile;
+      const canViewProfile = canEditProfile || profile.privacy.allowProfileViewing;
+      const isOnlineVisible = profile.privacy.showOnlineStatus;
+      const isOnline = onlineUsernames.has(profile.username);
+
+      document.getElementById('profile-modal').style.display = 'flex';
+      if (isOwnerProfile) {
+        applyProfileTheme(profile.profileTheme);
+      } else {
+        applyProfileModalTheme(profile.profileTheme);
+      }
+      document.getElementById('profile-modal').scrollTop = 0;
+      document.querySelector('.profile-modal').scrollTop = 0;
+
+      document.getElementById('profile-preview').src = profile.avatar;
+      selectedProfileAvatar = profile.avatar;
+      selectedProfileCover = profile.coverPhoto;
+      document.getElementById('crop-editor').style.display = 'none';
+
+      const cover = document.getElementById('profile-cover');
+      cover.src = profile.coverPhoto || '';
+      cover.style.display = profile.coverPhoto ? 'block' : 'none';
+
+      document.getElementById('profile-display-name').value = profile.displayName;
+      document.getElementById('profile-name').textContent = `@${profile.username}`;
+      document.getElementById('profile-online-dot').className =
+        `profile-online-dot ${isOnline && isOnlineVisible ? 'online' : 'offline'}`;
+
+      document.getElementById('profile-status').textContent =
+        isOnlineVisible
+          ? (isOnline ? 'Online now' : 'Offline')
+          : 'Online status hidden';
+
+      document.getElementById('profile-last-seen').textContent =
+        profile.privacy.showLastSeen
+          ? `Last seen ${formatProfileDate(profile.lastSeen)}`
+          : 'Last seen hidden';
+      document.getElementById('profile-join-date').textContent =
+        `Joined ${formatProfileDate(profile.createdAt)}`;
+
+      document.getElementById('profile-custom-status').value =
+        canViewProfile ? profile.customStatus : '';
+      document.getElementById('profile-note').value =
+        canViewProfile ? (profile.note?.text || '') : '';
+      document.getElementById('profile-bio').value =
+        canViewProfile ? profile.bio : 'This profile is private.';
+      document.getElementById('profile-about').value =
+        canViewProfile ? profile.aboutMe : '';
+      renderProfileStoriesList(profile);
+
+      document.getElementById('profile-theme').value = profile.profileTheme;
+      document.getElementById('privacy-online').checked = profile.privacy.showOnlineStatus;
+      document.getElementById('privacy-last-seen').checked = profile.privacy.showLastSeen;
+      document.getElementById('privacy-dms').checked = profile.privacy.allowDirectMessages;
+      document.getElementById('privacy-viewing').checked = profile.privacy.allowProfileViewing;
+
+      setProfileFieldState(canEditProfile, profile, canViewProfile);
+      renderProfileBadges(profile);
+      renderProfileStats(profile);
+      renderProfileActivity(profile, canEditProfile);
+
+      bioEmojiPicker.style.display = 'none';
+      statusEmojiPicker.style.display = 'none';
+    }
+
+    function renderProfileStoriesList(profile = currentUser) {
+      const list = document.getElementById('profile-stories-list');
+      if (!list) return;
+
+      const stories = getActiveStories(profile);
+      list.innerHTML = '';
+
+      if (!stories.length) {
+        const empty = document.createElement('span');
+        empty.className = 'profile-story-empty';
+        empty.textContent = 'No active stories yet.';
+        list.appendChild(empty);
+        return;
+      }
+
+      stories.forEach(story => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'profile-story-chip';
+        button.onclick = () => openStoryViewer(currentUser, true, story.id);
+        button.innerHTML = `<span>${story.type}</span><small>${formatRelativeTime(story.createdAt)}</small>`;
+        list.appendChild(button);
+      });
+    }
+
+    function openStoryOrProfile(user, editable = false) {
+      const profile = normalizeProfile(mergeCachedProfile(user));
+
+      if (hasTimelineItems(profile)) {
+        openStoryViewer(profile, editable);
+        return;
+      }
+
+      openProfileModal(profile, editable);
+    }
+
+    function openNoteBubbleStory(user, editable = false, event = null) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+
+      const profile = normalizeProfile(mergeCachedProfile(user));
+      const noteStory = getTimelineItems(profile)
+        .filter(item => item.type === 'note')
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+      if (noteStory) {
+        openNoteViewer(profile, noteStory);
+        return;
+      }
+
+      openStoryOrProfile(profile, editable);
+    }
+
+    function openNoteViewer(user, note) {
+      const profile = normalizeProfile(mergeCachedProfile(user));
+      const normalizedNote = normalizeNoteItem(note);
+
+      if (!normalizedNote) {
+        openStoryOrProfile(profile, false);
+        return;
+      }
+
+      document.getElementById('note-viewer-avatar').src = profile.avatar;
+      document.getElementById('note-viewer-username').textContent = `@${profile.username}`;
+      document.getElementById('note-viewer-time').textContent = formatRelativeTime(normalizedNote.createdAt);
+      document.getElementById('note-viewer-text').textContent = normalizedNote.content;
+      document.getElementById('note-viewer-modal').style.display = 'flex';
+    }
+
+    function closeNoteViewer() {
+      document.getElementById('note-viewer-modal').style.display = 'none';
+    }
+
+    function openStoryViewer(user, editable = false, storyId = '') {
+      const profile = normalizeProfile(user);
+      const stories = getTimelineItems(profile);
+      if (!stories.length) {
+        openProfileModal(profile, editable);
+        return;
+      }
+
+      storyViewerUser = { profile, editable };
+      storyViewerStories = stories;
+      storyViewerIndex = Math.max(0, stories.findIndex(story => story.id === storyId));
+
+      document.getElementById('story-viewer-avatar').src = profile.avatar;
+      document.getElementById('story-viewer-username').textContent = `@${profile.username}`;
+
+      document.getElementById('story-viewer-modal').style.display = 'flex';
+      const isOwnStory = currentUser?.username === profile.username;
+      document.querySelector('.story-reply-bar').classList.toggle('is-owner-view', isOwnStory);
+      document.getElementById('story-reply-form').style.display =
+        isOwnStory ? 'none' : 'block';
+      document.getElementById('story-reaction-buttons').style.display =
+        isOwnStory ? 'none' : 'flex';
+      document.getElementById('story-insights-panel').style.display =
+        isOwnStory ? 'grid' : 'none';
+      document.getElementById('story-delete-btn').style.display =
+        isOwnStory ? 'inline-flex' : 'none';
+
+      if (storyKeyboardHandler) {
+        document.removeEventListener('keydown', storyKeyboardHandler);
+      }
+      storyKeyboardHandler = event => {
+        if (event.key === 'ArrowRight') nextStory();
+        if (event.key === 'ArrowLeft') previousStory();
+        if (event.key === 'Escape') closeStoryViewer();
+      };
+      document.addEventListener('keydown', storyKeyboardHandler);
+
+      renderCurrentStory();
+    }
+
+    function closeStoryViewer() {
+      document.getElementById('story-viewer-modal').style.display = 'none';
+      clearTimeout(storyProgressTimer);
+      storyProgressTimer = null;
+      if (storyKeyboardHandler) {
+        document.removeEventListener('keydown', storyKeyboardHandler);
+        storyKeyboardHandler = null;
+      }
+      storyViewerUser = null;
+      storyViewerStories = [];
+      storyViewerIndex = 0;
+      storyIsPaused = false;
+      storyProgressRemaining = 0;
+      document.getElementById('story-video-controls').style.display = 'none';
+    }
+
+    function getCurrentStory() {
+      return storyViewerStories[storyViewerIndex] || null;
+    }
+
+    function renderStoryProgress() {
+      const progress = document.getElementById('story-progress-bars');
+      progress.innerHTML = storyViewerStories.map((story, index) => `
+        <span class="story-progress-track">
+          <i style="width:${index < storyViewerIndex ? 100 : index === storyViewerIndex ? 0 : 0}%"></i>
+        </span>
+      `).join('');
+    }
+
+    function fillCurrentProgress(duration = STORY_DURATION_MS) {
+      const bars = document.querySelectorAll('#story-progress-bars i');
+      const current = bars[storyViewerIndex];
+      if (!current) return;
+
+      storyProgressDuration = duration;
+      storyProgressRemaining = duration;
+      storyProgressStartedAt = Date.now();
+      storyIsPaused = false;
+      current.style.transition = 'none';
+      current.style.width = '0%';
+      requestAnimationFrame(() => {
+        current.style.transition = `width ${duration}ms linear`;
+        current.style.width = '100%';
+      });
+    }
+
+    function pauseStoryPlayback() {
+      if (!storyViewerUser || storyIsPaused) return;
+
+      const story = getCurrentStory();
+      const currentBar = document.querySelectorAll('#story-progress-bars i')[storyViewerIndex];
+      const video = getStoryVideo();
+      storyIsPaused = true;
+
+      if (story?.type === 'video') {
+        if (video && !video.paused) video.pause();
+        if (currentBar && video?.duration) {
+          const percent = Math.min(100, (video.currentTime / video.duration) * 100);
+          currentBar.style.transition = 'none';
+          currentBar.style.width = `${percent}%`;
+        }
+        return;
+      }
+
+      const elapsed = Math.max(0, Date.now() - storyProgressStartedAt);
+      storyProgressRemaining = Math.max(0, storyProgressDuration - elapsed);
+      clearTimeout(storyProgressTimer);
+
+      if (currentBar && storyProgressDuration) {
+        const percent = Math.min(100, (elapsed / storyProgressDuration) * 100);
+        currentBar.style.transition = 'none';
+        currentBar.style.width = `${percent}%`;
+      }
+    }
+
+    function resumeStoryPlayback() {
+      if (!storyViewerUser || !storyIsPaused) return;
+
+      const story = getCurrentStory();
+      const currentBar = document.querySelectorAll('#story-progress-bars i')[storyViewerIndex];
+      const video = getStoryVideo();
+      storyIsPaused = false;
+
+      if (story?.type === 'video') {
+        if (video) {
+          const remaining = video.duration
+            ? Math.max(0, (video.duration - video.currentTime) * 1000)
+            : STORY_DURATION_MS;
+
+          if (currentBar) {
+            currentBar.style.transition = `width ${remaining}ms linear`;
+            currentBar.style.width = '100%';
+          }
+
+          video.play().catch(() => {});
+        }
+        return;
+      }
+
+      storyProgressStartedAt = Date.now();
+      clearTimeout(storyProgressTimer);
+      storyProgressTimer = setTimeout(() => nextStory(), storyProgressRemaining);
+
+      if (currentBar) {
+        currentBar.style.transition = `width ${storyProgressRemaining}ms linear`;
+        currentBar.style.width = '100%';
+      }
+    }
+
+    function startStoryHold(event) {
+      if (event?.target?.closest('.modal-close, #story-delete-btn, #story-video-controls, .story-reply-bar, .story-insights-panel, #story-viewer-profile-btn')) return;
+
+      storyHoldStartedAt = Date.now();
+      storySuppressTap = false;
+      pauseStoryPlayback();
+    }
+
+    function endStoryHold() {
+      if (!storyHoldStartedAt) return;
+
+      storySuppressTap = Date.now() - storyHoldStartedAt > 260;
+      storyHoldStartedAt = 0;
+      resumeStoryPlayback();
+
+      if (storySuppressTap) {
+        setTimeout(() => {
+          storySuppressTap = false;
+        }, 80);
+      }
+    }
+
+    function renderCurrentStory() {
+      const story = getCurrentStory();
+      if (!story || !storyViewerUser) return closeStoryViewer();
+
+      clearTimeout(storyProgressTimer);
+      document.getElementById('story-viewer-time').textContent =
+        formatRelativeTime(story.createdAt);
+      renderStoryProgress();
+      recordStoryView(storyViewerUser.profile.username, story.id);
+      renderStoryInsights(storyViewerUser.profile.username);
+
+      const content = document.getElementById('story-viewer-content');
+      content.className = `story-viewer-content story-type-${story.type}`;
+      content.innerHTML = '';
+      content.onpointerdown = startStoryHold;
+      content.onpointerup = endStoryHold;
+      content.onpointerleave = endStoryHold;
+      content.onpointercancel = endStoryHold;
+
+      if (story.type === 'image') {
+        const img = document.createElement('img');
+        img.src = story.mediaUrl || story.content;
+        img.alt = `${storyViewerUser.profile.username} story`;
+        content.appendChild(img);
+        fillCurrentProgress();
+        storyProgressTimer = setTimeout(() => nextStory(), STORY_DURATION_MS);
+      } else if (story.type === 'video') {
+        const video = document.createElement('video');
+        video.src = story.mediaUrl || story.content;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.onended = () => nextStory();
+        video.onloadedmetadata = () => fillCurrentProgress(Math.max(1000, video.duration * 1000));
+        content.appendChild(video);
+      } else {
+        const wrap = document.createElement('div');
+        wrap.className = 'story-note-layout';
+        const bubble = document.createElement('div');
+        bubble.className = 'story-note-bubble';
+        bubble.textContent = story.content;
+        const avatar = document.createElement('img');
+        avatar.src = storyViewerUser.profile.avatar;
+        avatar.alt = '';
+        wrap.appendChild(bubble);
+        wrap.appendChild(avatar);
+        content.appendChild(wrap);
+        fillCurrentProgress();
+        storyProgressTimer = setTimeout(() => nextStory(), STORY_DURATION_MS);
+      }
+
+      document.getElementById('story-video-controls').style.display =
+        story.type === 'video' ? 'flex' : 'none';
+      syncCurrentStoryReactionState();
+
+      ['prev', 'next'].forEach(direction => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `story-nav-zone story-nav-${direction}`;
+        button.setAttribute('aria-label', direction === 'prev' ? 'Previous story' : 'Next story');
+        button.onclick = direction === 'prev' ? previousStory : nextStory;
+        content.appendChild(button);
+      });
+    }
+
+    function nextStory(event) {
+      if (event) event.stopPropagation();
+      if (storySuppressTap) {
+        if (event) event.preventDefault();
+        return;
+      }
+      if (!storyViewerStories.length) return;
+
+      if (storyViewerIndex < storyViewerStories.length - 1) {
+        storyViewerIndex += 1;
+        renderCurrentStory();
+      } else {
+        closeStoryViewer();
+      }
+    }
+
+    function previousStory(event) {
+      if (event) event.stopPropagation();
+      if (storySuppressTap) {
+        if (event) event.preventDefault();
+        return;
+      }
+      if (!storyViewerStories.length) return;
+
+      storyViewerIndex = Math.max(0, storyViewerIndex - 1);
+      renderCurrentStory();
+    }
+
+    function getStoryVideo() {
+      return document.querySelector('#story-viewer-content video');
+    }
+
+    function toggleStoryVideoPlayback() {
+      const video = getStoryVideo();
+      if (!video) return;
+      if (video.paused) video.play();
+      else video.pause();
+    }
+
+    function toggleStoryVideoMute() {
+      const video = getStoryVideo();
+      if (!video) return;
+      video.muted = !video.muted;
+    }
+
+    function openStoryProfile() {
+      if (!storyViewerUser) return;
+
+      const { profile, editable } = storyViewerUser;
+      closeStoryViewer();
+      openProfileModal(profile, editable);
+    }
+
+    function toggleStoryInsights() {
+      const panel = document.getElementById('story-insights-panel');
+      panel.style.display = panel.style.display === 'none' ? 'grid' : 'none';
+    }
+
+    function renderStoryInsights(username) {
+      const ownerProfile = getProfileForStoryOwner(username);
+      const activeStory = getCurrentStory() || ownerProfile?.story || {};
+      const storyAnalytics = activeStory || {};
+      const fallbackAnalytics = readStoryAnalytics(username);
+      const views = (storyAnalytics.views || fallbackAnalytics.views || []).filter(
+        view => view.username !== username
+      );
+      const reactions = (storyAnalytics.reactions || fallbackAnalytics.reactions || []).filter(
+        reaction => reaction.username !== username
+      );
+      const viewersList = document.getElementById('story-viewers-list');
+      const reactionsList = document.getElementById('story-reactions-list');
+
+      viewersList.innerHTML = views.length
+        ? views.map(view => `<li><img src="${view.avatar || getRobotAvatarUrl(view.username, view.username.length)}" alt=""><span>${view.username}</span><small>${formatRelativeTime(view.viewedAt)}</small></li>`).join('')
+        : '<li><span>No viewers yet</span></li>';
+
+      reactionsList.innerHTML = reactions.length
+        ? reactions.map(reaction => `<li><img src="${reaction.avatar || getRobotAvatarUrl(reaction.username, reaction.username.length)}" alt=""><span>${reaction.username}</span><small>${reaction.type}</small></li>`).join('')
+        : '<li><span>No reactions yet</span></li>';
+    }
+
+    function showStoryActionFeedback(message) {
+      const feedback = document.getElementById('story-action-feedback');
+      if (!feedback) return;
+
+      feedback.textContent = message;
+      feedback.style.display = 'block';
+      feedback.classList.remove('is-visible');
+      requestAnimationFrame(() => feedback.classList.add('is-visible'));
+
+      clearTimeout(feedback.hideTimer);
+      feedback.hideTimer = setTimeout(() => {
+        feedback.classList.remove('is-visible');
+        setTimeout(() => {
+          feedback.style.display = 'none';
+        }, 180);
+      }, 1400);
+    }
+
+    function showAppToast(message) {
+      const toast = document.getElementById('app-toast');
+      if (!toast) return;
+
+      toast.textContent = message;
+      toast.style.display = 'block';
+      toast.classList.remove('is-visible');
+      requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+      clearTimeout(toast.hideTimer);
+      toast.hideTimer = setTimeout(() => {
+        toast.classList.remove('is-visible');
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 180);
+      }, 2200);
+    }
+
+    function markStoryReaction(type) {
+      document.querySelectorAll('#story-reaction-buttons button').forEach(button => {
+        const isSelected = button.getAttribute('onclick')?.includes(`'${type}'`);
+        button.classList.toggle('is-selected', isSelected);
+        button.classList.remove('just-reacted');
+
+        if (isSelected) {
+          requestAnimationFrame(() => button.classList.add('just-reacted'));
+        }
+      });
+    }
+
+    function syncCurrentStoryReactionState() {
+      const story = getCurrentStory();
+      const myReaction = story?.reactions?.find(
+        reaction => reaction.username === currentUser?.username
+      );
+
+      document.querySelectorAll('#story-reaction-buttons button').forEach(button => {
+        const isSelected = Boolean(
+          myReaction && button.getAttribute('onclick')?.includes(`'${myReaction.type}'`)
+        );
+        button.classList.toggle('is-selected', isSelected);
+      });
+    }
+
+    function reactToStory(type) {
+      if (!storyViewerUser || !currentUser) return;
+
+      const owner = storyViewerUser.profile.username;
+      if (owner === currentUser.username) return;
+
+      markStoryReaction(type);
+      showStoryActionFeedback('Reaction sent');
+
+      const analytics = readStoryAnalytics(owner);
+      analytics.reactions = analytics.reactions.filter(
+        reaction => reaction.username !== currentUser.username
+      );
+      analytics.reactions.push({
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        type,
+        reactedAt: new Date().toISOString()
+      });
+
+      writeStoryAnalytics(owner, analytics);
+      renderStoryInsights(owner);
+
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'story_reaction',
+          ownerUsername: owner,
+          storyId: getCurrentStory()?.id,
+          reactionType: type
+        }));
+      } else if (owner !== currentUser.username) {
+        fetch(`/api/stories/${encodeURIComponent(owner)}/reaction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('chat_token')}`
+          },
+          body: JSON.stringify({ type, storyId: getCurrentStory()?.id })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.user) {
+              const updatedProfile = mergeCachedProfile(data.user);
+              cacheProfileFromUser(updatedProfile);
+
+              if (allUsers.some(user => user.username === updatedProfile.username)) {
+                allUsers = allUsers.map(user =>
+                  user.username === updatedProfile.username ? updatedProfile : user
+                );
+              } else {
+                allUsers.push(updatedProfile);
+              }
+
+              if (storyViewerUser?.profile?.username === updatedProfile.username) {
+                storyViewerUser.profile = updatedProfile;
+                renderStoryInsights(updatedProfile.username);
+              }
+            }
+          })
+          .catch(err => console.warn('Story reaction sync failed:', err));
+      }
+    }
+
+    function getDmRoomIdForUser(username) {
+      return `dm_${[currentUser.username, username].sort().join('_')}`;
+    }
+
+    function sendStoryDm(ownerUsername, message) {
+      if (!ownerUsername || !message || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      const owner = getUserByUsername(ownerUsername);
+
+      if (owner && !canDirectMessageUser(owner)) {
+        showStoryActionFeedback(getDmBlockedMessage(owner));
+        return;
+      }
+
+      socket.send(JSON.stringify({
+        type: 'chat',
+        roomId: getDmRoomIdForUser(ownerUsername),
+        message,
+        storyReply: true
+      }));
+    }
+
+    function sendStoryReply(event) {
+      event.preventDefault();
+
+      if (!storyViewerUser || !currentUser) return;
+
+      const owner = storyViewerUser.profile.username;
+      const input = document.getElementById('story-reply-input');
+      const message = input.value.trim();
+
+      if (!message || owner === currentUser.username) return;
+
+      const currentItem = getCurrentStory();
+      const itemLabel = currentItem?.type === 'note' ? 'note' : 'story';
+      sendStoryDm(owner, `Reply to your ${itemLabel}: ${message}`);
+      input.value = '';
+      showStoryActionFeedback('Message sent');
+    }
+
+    function openStoryComposer() {
+      if (!currentUser) return;
+
+      const input = document.getElementById('story-media-upload');
+      input.value = '';
+      input.click();
+    }
+
+    function closeStoryPreview() {
+      pendingStoryDraft = null;
+      document.getElementById('story-preview-content').innerHTML = '';
+      document.getElementById('story-preview-modal').style.display = 'none';
+    }
+
+    function openStoryPreview(story) {
+      pendingStoryDraft = story;
+      const box = document.getElementById('story-preview-content');
+      box.innerHTML = '';
+
+      if (story.type === 'image') {
+        const img = document.createElement('img');
+        img.src = story.mediaUrl;
+        img.alt = 'Story preview';
+        box.appendChild(img);
+      } else if (story.type === 'video') {
+        const video = document.createElement('video');
+        video.src = story.mediaUrl;
+        video.controls = true;
+        video.playsInline = true;
+        box.appendChild(video);
+      }
+
+      document.getElementById('story-preview-modal').style.display = 'flex';
+    }
+
+    function createStoryDraft(fields) {
+      const createdAt = new Date();
+      return {
+        id: `story_${createdAt.getTime()}_${Math.random().toString(36).slice(2, 8)}`,
+        type: fields.type,
+        content: fields.content || '',
+        mediaUrl: fields.mediaUrl || '',
+        createdAt: createdAt.toISOString(),
+        expiresAt: new Date(createdAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
+      };
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = event => resolve(event.target.result);
+        reader.onerror = () => reject(new Error('Unable to read selected file.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const supportedPreviewImageTypes = new Set([
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/gif',
+      'image/bmp'
+    ]);
+
+    const supportedPreviewImageExtensions = new Set([
+      'png',
+      'jpg',
+      'jpeg',
+      'webp',
+      'gif',
+      'bmp'
+    ]);
+
+    function isSupportedPreviewImage(file) {
+      if (!file) return false;
+      if (supportedPreviewImageTypes.has(file.type)) return true;
+
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      return supportedPreviewImageExtensions.has(extension);
+    }
+
+    async function readSupportedPreviewImage(file) {
+      if (!isSupportedPreviewImage(file)) {
+        throw new Error('Choose a JPG, PNG, WEBP, GIF, or BMP image.');
+      }
+
+      return readFileAsDataUrl(file);
+    }
+
+    async function saveStoryDraft(story) {
+      if (!story || !currentUser) return;
+
+      const localStories = [
+        ...getActiveStories(currentUser).filter(item => item.id !== story.id),
+        story
+      ];
+
+      currentUser = normalizeProfile({
+        ...currentUser,
+        stories: localStories,
+        story: localStories[0] || null
+      });
+      cacheProfileFromUser(currentUser);
+      updateCurrentProfileCard();
+      renderProfileStoriesList(currentUser);
+
+      try {
+        const token = localStorage.getItem('chat_token');
+        const res = await fetch('/api/stories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ story })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Unable to save story.');
+
+        currentUser = normalizeProfile({
+          ...currentUser,
+          ...(data.user || {}),
+          stories: data.user?.stories || [...getActiveStories(currentUser), story]
+        });
+        cacheProfileFromUser(currentUser);
+        updateCurrentProfileCard();
+        renderProfileStoriesList(currentUser);
+        fetchUsersAndGroups().catch(err => console.warn('Story list refresh failed:', err));
+        return 'remote';
+      } catch (err) {
+        console.warn('Story saved locally because backend save failed:', err);
+        return 'local';
+      }
+    }
+
+    async function confirmPendingStory() {
+      if (!pendingStoryDraft) return;
+
+      const button = document.getElementById('story-publish-btn');
+      if (button?.disabled) return;
+
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Uploading...';
+      }
+
+      try {
+        const story = pendingStoryDraft;
+        closeStoryPreview();
+        showAppToast('Story added. Uploading in background...');
+        saveStoryDraft(story).then(result => {
+          showAppToast(
+            result === 'remote'
+              ? 'Story uploaded successfully'
+              : 'Story saved locally'
+          );
+        });
+      } catch (err) {
+        showAppToast(err.message || 'Unable to upload story');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Publish Story';
+        }
+      }
+    }
+
+    function openNoteStoryComposer() {
+      const input = document.getElementById('note-story-input');
+      input.value = '';
+      document.getElementById('note-story-preview-bubble').textContent = 'Your note appears here';
+      document.getElementById('note-story-modal').style.display = 'flex';
+      input.focus();
+    }
+
+    function closeNoteStoryComposer() {
+      document.getElementById('note-story-modal').style.display = 'none';
+    }
+
+    async function publishNoteStory() {
+      const input = document.getElementById('note-story-input');
+      const text = input.value.trim().slice(0, 60);
+      if (!text) return;
+
+      await saveStoryDraft(createStoryDraft({
+        type: 'note',
+        content: text
+      }));
+      closeNoteStoryComposer();
+    }
+
+    async function deleteCurrentStory() {
+      const story = getCurrentStory();
+      if (!story || !currentUser || storyViewerUser?.profile?.username !== currentUser.username) return;
+
+      const confirmed = await showConfirm(
+        'Are you sure you want to delete this story?',
+        'Delete Story'
+      );
+
+      if (!confirmed) return;
+
+      const stories = getActiveStories(currentUser).filter(item => item.id !== story.id);
+      currentUser = normalizeProfile({ ...currentUser, stories, story: stories[0] || null });
+      cacheProfileFromUser(currentUser);
+      updateCurrentProfileCard();
+      renderProfileStoriesList(currentUser);
+      storyViewerStories = stories;
+
+      if (!stories.length) closeStoryViewer();
+      else {
+        storyViewerIndex = Math.min(storyViewerIndex, stories.length - 1);
+        renderCurrentStory();
+      }
+
+      try {
+        const res = await fetch(`/api/stories/${encodeURIComponent(story.id)}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${localStorage.getItem('chat_token')}` }
+        });
+        if (!res.ok) throw new Error('Unable to delete story.');
+      } catch (err) {
+        console.warn('Story delete will be applied locally only:', err);
+      }
+    }
+
+    function openNoteComposer() {
+      document.getElementById('composer-note-input').value = currentUser?.note?.text || '';
+      document.getElementById('note-composer-modal').style.display = 'flex';
+    }
+
+    function closeNoteComposer() {
+      document.getElementById('note-composer-modal').style.display = 'none';
+    }
+
+    async function publishNote() {
+      const text = document.getElementById('composer-note-input').value.trim().slice(0, 60);
+
+      try {
+        await persistCurrentProfilePatch({
+          note: text
+            ? {
+                text,
+                updatedAt: new Date().toISOString()
+              }
+            : null
+        });
+        closeNoteComposer();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function clearNote() {
+      try {
+        await persistCurrentProfilePatch({ note: null });
+        document.getElementById('composer-note-input').value = '';
+        closeNoteComposer();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal')
+        .style.display = 'none';
+      document.getElementById('profile-modal').scrollTop = 0;
+
+      bioEmojiPicker.style.display = 'none';
+      statusEmojiPicker.style.display = 'none';
+    }
+let cropX = 0;
+let cropY = 0;
+let isDragging = false;
+let startX = 0;
+let startY = 0;
+let coverCropX = 0;
+let coverCropY = 0;
+let isCoverDragging = false;
+let coverStartX = 0;
+let coverStartY = 0;
+
+document.getElementById('profile-upload')
+.addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  selectedProfileAvatar = null;
+  const cropEditor = document.getElementById('crop-editor');
+  const cropImage = document.getElementById('crop-image');
+
+  try {
+    cropEditor.style.display = 'block';
+    cropEditor.classList.add('is-loading');
+    showAppToast('Loading profile picture...');
+
+    const imageUrl = await readSupportedPreviewImage(file);
+
+    cropImage.onload = function () {
+      cropX = 0;
+      cropY = 0;
+      cropZoom.value = 1;
+      updateCropTransform();
+      cropEditor.classList.remove('is-loading');
+      showAppToast('Profile picture ready to crop.');
+    };
+    cropImage.onerror = function () {
+      cropEditor.classList.remove('is-loading');
+      cropEditor.style.display = 'none';
+      showAppToast('This image cannot be previewed. Try another file.');
+    };
+
+    cropImage.src = imageUrl;
+  } catch (err) {
+    cropEditor.classList.remove('is-loading');
+    cropEditor.style.display = 'none';
+    showAppToast(err.message || 'Unable to load profile picture.');
+  } finally {
+    this.value = '';
+  }
+});
+
+document.getElementById('profile-cover-upload')
+.addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const coverEditor = document.getElementById('cover-editor');
+  const coverCropImage = document.getElementById('cover-crop-image');
+
+  try {
+    coverEditor.style.display = 'block';
+    coverEditor.classList.add('is-loading');
+    showAppToast('Loading cover photo...');
+
+    const imageUrl = await readSupportedPreviewImage(file);
+
+    coverCropImage.onload = function () {
+      coverCropX = 0;
+      coverCropY = 0;
+      coverCropZoom.value = 1;
+      updateCoverCropTransform();
+      coverEditor.classList.remove('is-loading');
+      showAppToast('Cover photo ready to crop.');
+    };
+    coverCropImage.onerror = function () {
+      coverEditor.classList.remove('is-loading');
+      coverEditor.style.display = 'none';
+      showAppToast('This cover photo cannot be previewed. Try another file.');
+    };
+
+    coverCropImage.src = imageUrl;
+  } catch (err) {
+    coverEditor.classList.remove('is-loading');
+    coverEditor.style.display = 'none';
+    showAppToast(err.message || 'Unable to load cover photo.');
+  } finally {
+    this.value = '';
+  }
+});
+
+document.getElementById('story-media-upload')
+.addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+    alert('Please choose an image or video file.');
+    this.value = '';
+    return;
+  }
+
+  try {
+    const type = file.type.startsWith('video/') ? 'video' : 'image';
+    const mediaUrl = type === 'image'
+      ? await resizeImageFile(file, 1200, 1600, 0.78)
+      : await readFileAsDataUrl(file);
+
+    openStoryPreview(createStoryDraft({ type, mediaUrl }));
+  } catch (err) {
+    alert(err.message || 'Unable to preview this story.');
+  } finally {
+    this.value = '';
+  }
+});
+
+document.getElementById('note-story-input')
+.addEventListener('input', function () {
+  document.getElementById('note-story-preview-bubble').textContent =
+    this.value.trim() || 'Your note appears here';
+});
+
+function setStoryMode() {}
+
+function clearStory() {}
+
+
+const cropFrame =
+    document.getElementById('crop-frame');
+
+const cropImage =
+    document.getElementById('crop-image');
+
+const cropZoom =
+    document.getElementById('crop-zoom');
+
+const coverCropFrame =
+    document.getElementById('cover-crop-frame');
+
+const coverCropImage =
+    document.getElementById('cover-crop-image');
+
+const coverCropZoom =
+    document.getElementById('cover-crop-zoom');
+
+cropFrame.addEventListener('mousedown', e => {
+
+    isDragging = true;
+
+    startX = e.clientX - cropX;
+    startY = e.clientY - cropY;
+
+});
+
+window.addEventListener('mouseup', () => {
+
+    isDragging = false;
+    isCoverDragging = false;
+
+});
+
+window.addEventListener('mousemove', e => {
+
+    if (!isDragging) return;
+
+    cropX = e.clientX - startX;
+    cropY = e.clientY - startY;
+
+    updateCropTransform();
+
+});
+
+cropZoom.addEventListener(
+    'input',
+    updateCropTransform
+);
+
+coverCropFrame.addEventListener('mousedown', e => {
+    isCoverDragging = true;
+    coverStartX = e.clientX - coverCropX;
+    coverStartY = e.clientY - coverCropY;
+});
+
+coverCropFrame.addEventListener('touchstart', e => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    isCoverDragging = true;
+    coverStartX = touch.clientX - coverCropX;
+    coverStartY = touch.clientY - coverCropY;
+}, { passive: true });
+
+window.addEventListener('mousemove', e => {
+    if (!isCoverDragging) return;
+    coverCropX = e.clientX - coverStartX;
+    coverCropY = e.clientY - coverStartY;
+    updateCoverCropTransform();
+});
+
+window.addEventListener('touchmove', e => {
+    if (!isCoverDragging) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    coverCropX = touch.clientX - coverStartX;
+    coverCropY = touch.clientY - coverStartY;
+    updateCoverCropTransform();
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+    isCoverDragging = false;
+});
+
+coverCropZoom.addEventListener(
+    'input',
+    updateCoverCropTransform
+);
+
+function updateCropTransform() {
+
+    const zoom =
+        cropZoom.value;
+
+    cropImage.style.transform =
+        `translate(${cropX}px, ${cropY}px) scale(${zoom})`;
+
+}
+
+function updateCoverCropTransform() {
+
+    const zoom =
+        coverCropZoom.value;
+
+    coverCropImage.style.transform =
+        `translate(${coverCropX}px, ${coverCropY}px) scale(${zoom})`;
+
+}
+
+function applyCoverCrop() {
+
+    if (!coverCropImage.src) return;
+
+    const canvas =
+        document.createElement('canvas');
+
+    canvas.width = 1400;
+    canvas.height = 420;
+
+    const ctx =
+        canvas.getContext('2d');
+
+    const frameRect =
+        coverCropFrame.getBoundingClientRect();
+
+    const imageRect =
+        coverCropImage.getBoundingClientRect();
+
+    const scaleX =
+        coverCropImage.naturalWidth /
+        imageRect.width;
+
+    const scaleY =
+        coverCropImage.naturalHeight /
+        imageRect.height;
+
+    const sx =
+        (frameRect.left - imageRect.left) *
+        scaleX;
+
+    const sy =
+        (frameRect.top - imageRect.top) *
+        scaleY;
+
+    const sWidth =
+        frameRect.width *
+        scaleX;
+
+    const sHeight =
+        frameRect.height *
+        scaleY;
+
+    ctx.drawImage(
+        coverCropImage,
+        sx,
+        sy,
+        sWidth,
+        sHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    selectedProfileCover =
+        canvas.toDataURL('image/jpeg', 0.76);
+
+    const cover =
+        document.getElementById('profile-cover');
+
+    cover.src = selectedProfileCover;
+    cover.style.display = 'block';
+
+    document.getElementById('cover-editor').style.display = 'none';
+}
+
+function applyCrop() {
+
+    const canvas =
+        document.createElement('canvas');
+
+    canvas.width = 300;
+    canvas.height = 300;
+
+    const ctx =
+        canvas.getContext('2d');
+
+    const frameRect =
+        cropFrame.getBoundingClientRect();
+
+    const imageRect =
+        cropImage.getBoundingClientRect();
+
+    const scaleX =
+        cropImage.naturalWidth /
+        imageRect.width;
+
+    const scaleY =
+        cropImage.naturalHeight /
+        imageRect.height;
+
+    const sx =
+        (frameRect.left - imageRect.left) *
+        scaleX;
+
+    const sy =
+        (frameRect.top - imageRect.top) *
+        scaleY;
+
+    const sWidth =
+        frameRect.width *
+        scaleX;
+
+    const sHeight =
+        frameRect.height *
+        scaleY;
+
+    ctx.drawImage(
+        cropImage,
+        sx,
+        sy,
+        sWidth,
+        sHeight,
+        0,
+        0,
+        300,
+        300
+    );
+
+    const cropped =
+         canvas.toDataURL('image/jpeg', 0.65);
+
+    document.getElementById('profile-preview').src = cropped;
+    selectedProfileAvatar = cropped;
+
+   document.getElementById('current-user-name').textContent =
+  currentUser.username;
+
+document.getElementById('profile-bio-preview').textContent =
+  currentUser.bio || 'Infinity Chat User';
+
+document.getElementById('profile-bio').value =
+  currentUser.bio || 'Infinity Chat user';
+
+    document.getElementById(
+        'crop-editor'
+    ).style.display = 'none';
+}
+
+function getCurrentProfileAvatarForSave() {
+  if (selectedProfileAvatar) return selectedProfileAvatar;
+
+  const previewSrc = document.getElementById('profile-preview').src;
+  return previewSrc || currentUser.avatar;
+}
+
+function setProfileSaveState(isSaving, text = 'Save Profile') {
+  const button = document.getElementById('profile-save-btn');
+  if (!button) return;
+
+  button.disabled = isSaving;
+  button.classList.toggle('is-loading', isSaving);
+  button.textContent = isSaving ? text : 'Save Profile';
+}
+
+    async function saveProfile() {
+
+      const token =
+        localStorage.getItem('chat_token');
+
+      const cropEditor = document.getElementById('crop-editor');
+      if (cropEditor.style.display !== 'none' && cropImage.src) {
+        applyCrop();
+      }
+
+      let avatar = getCurrentProfileAvatarForSave();
+if (selectedProfileCover && selectedProfileCover.length > 700000) {
+  alert('Cover photo is too large. Please choose a smaller image.');
+  return;
+}
+      const bio =
+        document.getElementById('profile-bio')
+          .value;
+      const displayName =
+        document.getElementById('profile-display-name')
+          .value;
+      const aboutMe =
+        document.getElementById('profile-about')
+          .value;
+      const customStatus =
+        document.getElementById('profile-custom-status')
+          .value;
+      const noteText =
+        document.getElementById('profile-note')
+          .value
+          .trim()
+          .slice(0, 60);
+      const profileTheme =
+        document.getElementById('profile-theme')
+          .value;
+      const chatBackground =
+        normalizeChatTheme(currentUser.chatBackground);
+      const privacy = {
+        showOnlineStatus: document.getElementById('privacy-online').checked,
+        showLastSeen: document.getElementById('privacy-last-seen').checked,
+        allowDirectMessages: document.getElementById('privacy-dms').checked,
+        allowProfileViewing: document.getElementById('privacy-viewing').checked
+      };
+      const profileDraft = {
+        avatar,
+        coverPhoto: selectedProfileCover || '',
+        displayName,
+        bio,
+        aboutMe,
+        customStatus,
+        story: currentUser.story || null,
+        stories: getActiveStories(currentUser),
+        note: noteText
+          ? {
+              text: noteText,
+              updatedAt: new Date().toISOString()
+            }
+          : null,
+        profileTheme,
+        chatBackground,
+        privacy
+      };
+
+      try {
+        setProfileSaveState(true, 'Saving...');
+
+        const res =
+          await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(profileDraft)
+          });
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+          showAppToast(data.error || 'Failed to save profile.');
+          return;
+        }
+
+        currentUser = normalizeProfile({
+          ...currentUser,
+          ...(data.user || {}),
+          ...profileDraft
+        });
+
+        writeCachedProfile(currentUser.username, {
+          displayName: currentUser.displayName,
+          avatar: currentUser.avatar,
+          coverPhoto: currentUser.coverPhoto,
+          bio: currentUser.bio,
+          aboutMe: currentUser.aboutMe,
+          customStatus: currentUser.customStatus,
+          story: currentUser.story,
+          stories: getActiveStories(currentUser),
+          note: currentUser.note,
+          profileTheme: currentUser.profileTheme,
+          chatBackground: currentUser.chatBackground,
+          privacy: currentUser.privacy
+        });
+
+        localStorage.setItem(
+          'chat_token',
+          data.token
+        );
+
+        document.getElementById(
+          'current-user-avatar'
+        ).src =
+          currentUser.avatar;
+
+        selectedProfileCover = currentUser.coverPhoto || '';
+        selectedProfileAvatar = currentUser.avatar;
+
+        document.getElementById('profile-bio-preview').textContent =
+          currentUser.bio || 'Infinity Chat user';
+        updateCurrentProfileCard();
+
+        closeProfileModal();
+        showAppToast('Profile picture successfully uploaded.');
+
+        fetchUsersAndGroups().catch(err => {
+          console.warn('Profile refresh after save failed:', err);
+        });
+      }
+
+     catch (err) {
+  console.error('PROFILE SAVE ERROR:', err);
+  showAppToast('Unable to update profile. Please try again.');
+} finally {
+  setProfileSaveState(false);
+}
+    }
+
+    async function logout() {
+      localStorage.removeItem('chat_token');
+      location.reload();
+    }
+
+  </script>
+</body>
+</html>
