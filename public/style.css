@@ -5856,3 +5856,139 @@ body[class*="app-theme-"] .chat-box {
     min-height: 34px !important;
   }
 }
+
+/* Message actions and emoji pickers: keep controls attached to the selected message. */
+#groups-list {
+  max-height: 328px;
+  overflow-y: auto;
+  padding-right: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.message-form {
+  position: relative;
+}
+
+#message-emoji-picker {
+  position: absolute;
+  left: 14px;
+  bottom: calc(100% + 10px);
+  width: min(330px, calc(100vw - 28px));
+  max-height: min(430px, 58vh);
+  padding: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid rgba(255, 45, 166, 0.32);
+  border-radius: 18px;
+  background: rgba(255, 246, 252, 0.98);
+  box-shadow: 0 18px 38px rgba(24, 4, 26, 0.34);
+  z-index: 13000;
+}
+
+.emoji-category {
+  display: grid;
+  gap: 8px;
+}
+
+.emoji-category h4 {
+  margin: 0;
+  color: #7a1a58;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.emoji-category-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 34px);
+  gap: 8px;
+}
+
+#message-emoji-picker .emoji-option {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  color: #31142d;
+  background: #fff !important;
+  border: 1px solid rgba(255, 45, 166, 0.18) !important;
+  box-shadow: 0 6px 14px rgba(255, 45, 166, 0.12) !important;
+}
+
+#chat-view .msg-actions > .reaction-picker,
+#chat-view .msg-wrapper.me .msg-actions > .reaction-picker,
+body[class*="chat-bg-"] #chat-view .msg-actions > .reaction-picker {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  right: auto !important;
+  transform: none !important;
+  width: min(236px, calc(100vw - 48px)) !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 48px) !important;
+  padding: 10px !important;
+  display: none;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  border-radius: 18px !important;
+  background: rgba(28, 2, 31, 0.96) !important;
+  border: 1px solid rgba(255, 98, 186, 0.42) !important;
+  box-shadow: 0 16px 34px rgba(23, 0, 26, 0.38) !important;
+  z-index: 12050 !important;
+}
+
+#chat-view .msg-wrapper.me .msg-actions > .reaction-picker {
+  left: auto !important;
+  right: 0 !important;
+}
+
+#chat-view .msg-actions > .reaction-picker .emoji-option {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+  #groups-list {
+    max-height: 253px !important;
+  }
+
+  #message-emoji-picker {
+    left: 8px;
+    bottom: calc(100% + 8px);
+    width: min(268px, calc(100vw - 32px));
+    max-height: min(390px, 54vh);
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .emoji-category-grid {
+    grid-template-columns: repeat(5, 32px);
+    gap: 7px;
+  }
+
+  #message-emoji-picker .emoji-option {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 17px !important;
+  }
+
+  #chat-view .msg-actions > .reaction-picker,
+  #chat-view .msg-wrapper.me .msg-actions > .reaction-picker,
+  body[class*="chat-bg-"] #chat-view .msg-actions > .reaction-picker {
+    width: min(218px, calc(100vw - 42px)) !important;
+    max-width: calc(100vw - 42px) !important;
+    padding: 9px !important;
+    gap: 7px !important;
+  }
+}

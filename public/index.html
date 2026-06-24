@@ -634,15 +634,66 @@
       chatThemeIds.includes(theme)
         ? theme
         : (legacyChatThemeMap[theme] || 'pink-dream');
-    const chatEmojis = [
-      { label: 'Laughing', value: '😂' },
-      { label: 'Sad', value: '😢' },
-      { label: 'Crying', value: '😭' },
-      { label: 'Angry', value: '😡' },
-      { label: 'Inlove', value: '😍' },
-      { label: 'Disgust', value: '🤢' },
-      { label: 'Heart', value: '❤️' }
+    const reactionEmojis = [
+      { label: 'Laughing', value: '\u{1F602}' },
+      { label: 'Shocked', value: '\u{1F631}' },
+      { label: 'Crying', value: '\u{1F62D}' },
+      { label: 'Angry', value: '\u{1F621}' },
+      { label: 'In love', value: '\u{1F60D}' },
+      { label: 'Disgust', value: '\u{1F922}' },
+      { label: 'Heart', value: '\u2764\uFE0F' }
     ];
+    const messageEmojiCategories = [
+      {
+        label: 'Emotion Emoji',
+        emojis: [
+          { label: 'Laughing', value: '\u{1F602}' },
+          { label: 'Smile', value: '\u{1F60A}' },
+          { label: 'In love', value: '\u{1F60D}' },
+          { label: 'Crying', value: '\u{1F62D}' },
+          { label: 'Angry', value: '\u{1F621}' },
+          { label: 'Surprised', value: '\u{1F62E}' },
+          { label: 'Pleading', value: '\u{1F97A}' }
+        ]
+      },
+      {
+        label: 'Heart Emojis',
+        emojis: [
+          { label: 'Red heart', value: '\u2764\uFE0F' },
+          { label: 'Pink heart', value: '\u{1FA77}' },
+          { label: 'Two hearts', value: '\u{1F495}' },
+          { label: 'Sparkling heart', value: '\u{1F496}' },
+          { label: 'Growing heart', value: '\u{1F497}' },
+          { label: 'Cupid heart', value: '\u{1F498}' },
+          { label: 'Broken heart', value: '\u{1F494}' }
+        ]
+      },
+      {
+        label: 'Food Emojis',
+        emojis: [
+          { label: 'Apple', value: '\u{1F34E}' },
+          { label: 'Strawberry', value: '\u{1F353}' },
+          { label: 'Pizza', value: '\u{1F355}' },
+          { label: 'Burger', value: '\u{1F354}' },
+          { label: 'Fries', value: '\u{1F35F}' },
+          { label: 'Doughnut', value: '\u{1F369}' },
+          { label: 'Cake', value: '\u{1F370}' }
+        ]
+      },
+      {
+        label: 'Animal Emoji',
+        emojis: [
+          { label: 'Dog', value: '\u{1F436}' },
+          { label: 'Cat', value: '\u{1F431}' },
+          { label: 'Bear', value: '\u{1F43B}' },
+          { label: 'Panda', value: '\u{1F43C}' },
+          { label: 'Rabbit', value: '\u{1F430}' },
+          { label: 'Frog', value: '\u{1F438}' },
+          { label: 'Monkey', value: '\u{1F435}' }
+        ]
+      }
+    ];
+    const chatEmojis = messageEmojiCategories.flatMap(category => category.emojis);
 
    const robotAvatarSeeds = [
   'Orbit', 'Pixel', 'Blinky', 'Nova', 'Circuit',
@@ -943,19 +994,33 @@ const STORY_DURATION_MS = 6000;
     function renderMessageEmojiPicker() {
       messageEmojiPicker.innerHTML = '';
 
-      chatEmojis.forEach(emoji => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'emoji-option';
-        button.title = emoji.label;
-        button.textContent = emoji.value;
-        button.onclick = () => {
-          messageInput.value += emoji.value;
-          messageInput.focus();
-          messageEmojiPicker.style.display = 'none';
-        };
+      messageEmojiCategories.forEach(category => {
+        const section = document.createElement('section');
+        section.className = 'emoji-category';
 
-        messageEmojiPicker.appendChild(button);
+        const title = document.createElement('h4');
+        title.textContent = category.label;
+        section.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'emoji-category-grid';
+
+        category.emojis.forEach(emoji => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'emoji-option';
+          button.title = emoji.label;
+          button.textContent = emoji.value;
+          button.onclick = () => {
+            messageInput.value += emoji.value;
+            messageInput.focus();
+          };
+
+          grid.appendChild(button);
+        });
+
+        section.appendChild(grid);
+        messageEmojiPicker.appendChild(section);
       });
     }
 
@@ -2415,7 +2480,7 @@ const STORY_DURATION_MS = 6000;
       reactionPicker.dataset.messageId = messageId;
       reactionPicker.style.display = 'none';
 
-      chatEmojis.forEach(emoji => {
+      reactionEmojis.forEach(emoji => {
         const reactionButton = document.createElement('button');
         reactionButton.type = 'button';
         reactionButton.className = 'emoji-option';
@@ -2450,6 +2515,7 @@ const STORY_DURATION_MS = 6000;
         actions.appendChild(emojiButton);
         actions.appendChild(replyButton);
         actions.appendChild(actionButton);
+        actions.appendChild(reactionPicker);
       }
 
       actions.appendChild(optionsMenu);
@@ -2601,7 +2667,6 @@ const STORY_DURATION_MS = 6000;
       el.appendChild(bubble);
 
       chatBox.appendChild(el);
-      if (!isDeleted && messageId) chatBox.appendChild(reactionPicker);
       if (!isDeleted) renderMessageReactions(el, payload.reactions || {});
       chatBox.scrollTop = chatBox.scrollHeight;
     }
