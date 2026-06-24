@@ -1951,7 +1951,9 @@ const STORY_DURATION_MS = 6000;
 
       const token = localStorage.getItem('chat_token');
       const generation = ++socketGeneration;
-      const ws = new WebSocket(`ws://${location.host}?token=${token}`);
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${window.location.host}?token=${token}`;
+      const ws = new WebSocket(wsUrl);
       socket = ws;
 
       ws.onopen = () => {
