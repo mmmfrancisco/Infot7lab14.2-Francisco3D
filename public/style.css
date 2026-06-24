@@ -5994,3 +5994,29 @@ body[class*="chat-bg-"] #chat-view .msg-actions > .reaction-picker {
     gap: 7px !important;
   }
 }
+
+/* Mobile reaction popover must float above neighboring message bubbles. */
+@media (max-width: 768px) {
+  #chat-view .msg-wrapper,
+  #chat-view .msg-bubble {
+    position: relative;
+    z-index: 1;
+    overflow: visible !important;
+  }
+
+  #chat-view .msg-wrapper.actions-visible {
+    z-index: 25000 !important;
+  }
+
+  #chat-view .msg-wrapper.actions-visible .msg-bubble {
+    z-index: 25001 !important;
+  }
+
+  #chat-view .msg-wrapper.actions-visible .msg-actions {
+    z-index: 25002 !important;
+  }
+
+  #chat-view .msg-wrapper.actions-visible .msg-actions > .reaction-picker {
+    z-index: 25003 !important;
+  }
+}
